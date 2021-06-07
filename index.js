@@ -8,7 +8,10 @@ const bot = new tgBot(token, {polling: true});
 const getRandomInt = max => Math.floor( Math.random() * Math.floor(max) );
 
 
-let otchislenList = []
+let otchislenList = [
+  {name: 'Oxore', count: 0},
+  {name: 'hopez', count: 0}
+];
 
 let regAnswers = [
   "— ОТКРОЙТЕ, А ТО В АРМИЮ ЗАБЕРУ!",
@@ -23,16 +26,20 @@ let regAnswers = [
 
 //bot.on('message', msg => bot.sendMessage(msg.chat.id, regAnswers[getRandomInt(regAnswers.length)] ) );
 
-bot.onText(/\/aaaaa/, msg => bot.sendMessage(msg.chat.id, 'ЧЕК!'));
+bot.onText(/\/aaaaa/, msg => {
+  let r = getRandomInt(otchislenList.length);
+  otchislenList[r].count++;
+  bot.sendMessage(msg.chat.id, `@${otchislenList[r].name.toUpperCase()}! ВЫ - РЯДОВОЙ!`);
+});
 
-bot.onText(/\/pnh/, msg => bot.sendMessage(msg.chat.id, 'САМ ИДИ НА;%:, ЩЕНОК, ТЫ КОГДА ПОД СЕБЯ ХОДИЛ, Я ЗА РОДИНУ ВАЕВАЛ МЕЖДУ ВЬЕТКОНГОМ И ЧЕРНИГОВЫМ!'))
+bot.onText(/\/pnh/, msg => bot.sendMessage(msg.chat.id, 'САМ ИДИ НА;%:, ЩЕНОК, ТЫ КОГДА ПОД СЕБЯ ХОДИЛ, Я ЗА РОДИНУ ВАЕВАЛ МЕЖДУ ВЬЕТКОНГОМ И ЧЕРНИГОВЫМ!'));
 
 bot.onText(/\/otchislen/, msg => {
   if (otchislenList.some(item => item.name == msg.from.username)) {
-    bot.sendMessage(msg.chat.id, `ВТОРОЙ РАЗ НЕ ПРИЗЫВАЮТ, БОЛВАН!!!`);
+    bot.sendMessage(msg.chat.id, `ВТОРОЙ РАЗ НЕ ПРИЗЫВАЮТ, БОЛВАН!`);
   } else {
+    otchislenList.push({name: msg.from.username, count: 0});
     bot.sendMessage(msg.chat.id, `АХАХАХАХАХА, УВИДИМСЯ, @${msg.from.username.toUpperCase()}!`);
-    otchislenList.push({name: msg.from.username,  wincounter: 0})
   }
 });
   
