@@ -20,6 +20,7 @@ let regAnswers = [
   "— СКОЛЬКО, ГОВОРИШЬ, ММР У ТЕБЯ?"
 ];
 
+
 //bot.on('message', msg => bot.sendMessage(msg.chat.id, regAnswers[getRandomInt(regAnswers.length)] ) );
 
 bot.onText(/\/aaaaa/, msg => bot.sendMessage(msg.chat.id, 'ЧЕК!'));
@@ -27,8 +28,12 @@ bot.onText(/\/aaaaa/, msg => bot.sendMessage(msg.chat.id, 'ЧЕК!'));
 bot.onText(/\/pnh/, msg => bot.sendMessage(msg.chat.id, 'САМ ИДИ НА;%:, ЩЕНОК, ТЫ КОГДА ПОД СЕБЯ ХОДИЛ, Я ЗА РОДИНУ ВАЕВАЛ МЕЖДУ ВЬЕТКОНГОМ И ЧЕРНИГОВЫМ!'))
 
 bot.onText(/\/otchislen/, msg => {
-  bot.sendMessage(msg.chat.id, `АХАХАХАХАХА, УВИДИМСЯ, @${msg.from.username.toUpperCase()}!`);
-  otchislenList.push({name: msg.from.username,  wincounter: 0});
+  if (otchislenList.some(item => item.name == msg.from.username)) {
+    bot.sendMessage(msg.chat.id, `ВТОРОЙ РАЗ НЕ ПРИЗЫВАЮТ, БОЛВАН!!!`);
+  } else {
+    bot.sendMessage(msg.chat.id, `АХАХАХАХАХА, УВИДИМСЯ, @${msg.from.username.toUpperCase()}!`);
+    otchislenList.push({name: msg.from.username,  wincounter: 0})
+  }
 });
   
 
