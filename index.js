@@ -29,18 +29,23 @@ let regAnswers = [
 bot.onText(/\/aaaaa/, msg => {
   let r = getRandomInt(otchislenList.length);
   otchislenList[r].count++;
-  bot.sendMessage(msg.chat.id, `@${otchislenList[r].name.toUpperCase()}! ВЫ - РЯДОВОЙ!`);
+  bot.sendMessage(msg.chat.id, `${otchislenList[r].name.toUpperCase()}! ВЫ - РЯДОВОЙ!`);
 });
 
-bot.onText(/\/pnh/, msg => bot.sendMessage(msg.chat.id, 'САМ ИДИ НА;%:, ЩЕНОК, ТЫ КОГДА ПОД СЕБЯ ХОДИЛ, Я ЗА РОДИНУ ВАЕВАЛ МЕЖДУ ВЬЕТКОНГОМ И ЧЕРНИГОВЫМ!'));
+bot.onText(/\/pnh/, msg =>
+  bot.sendMessage(msg.chat.id, 'САМ ИДИ НА;%:, ЩЕНОК, ТЫ КОГДА ПОД СЕБЯ ХОДИЛ, Я ЗА РОДИНУ ВАЕВАЛ МЕЖДУ ВЬЕТКОНГОМ И ЧЕРНИГОВЫМ!')
+);
 
 bot.onText(/\/otchislen/, msg => {
   if (otchislenList.some(item => item.name == msg.from.username)) {
     bot.sendMessage(msg.chat.id, `ВТОРОЙ РАЗ НЕ ПРИЗЫВАЮТ, БОЛВАН!`);
   } else {
     otchislenList.push({name: msg.from.username, count: 0});
-    bot.sendMessage(msg.chat.id, `АХАХАХАХАХА, УВИДИМСЯ, @${msg.from.username.toUpperCase()}!`);
-  }
+    bot.sendMessage(msg.chat.id, `АХАХАХАХАХА, УВИДИМСЯ, @${msg.from.username.toUpperCase()}!`);}
 });
-  
 
+bot.onText(/\/spisok/, msg =>
+  bot.sendMessage( msg.chat.id, otchislenList.map((item, i) => `<b>${i + 1}</b>. ${item.name} — <i>${item.count} лет!</i>`).join('\n'), {parse_mode: 'HTML'} )
+);
+  
+bot.on("polling_error", console.log);
