@@ -13,15 +13,19 @@ let otchisList = [
   {name: 'yobaneim', count: 15}
 ];
 
+let heComes = false;
+
 let regAnswers = [
   "— ОТКРОЙТЕ, А ТО В АРМИЮ ЗАБЕРУ!",
   "*DOOR INTENSIFIES*",
-  "— О, ЭТО ВЫ УДАЧНО ДОМОЙ ЗАШЛИ!",
+  //"— О, ЭТО ВЫ УДАЧНО ДВЕРКУ ОСТАВИЛИ!",
+  "*БУМ-БУМ-БУМ-ДЫЩ-ДЫН-БАЦ*",
   "— СЫНОЧКА, ОТКРЫВАЙ, ЭТО МАМА ПРИШЛА С ПРОДУКТАМИ!",
-  "— НА ГОЛОС НЕ ОБРАЩАЙ ВНИМАНИЯ, ЭТО Я ПРОСТЫЛА!",
+  "*ЗВУКИ ПОДСЛУШИВАНИЯ ВХОДНОЙ ДВЕРИ*",
+  "— ТУК-ТУК, ДОСТАВКА ПИЦЦЫ, КОТОРУЮ ВЫ НЕ ЗАКАЗЫВАЛИ! ПОДАРОЧНОЙ ПИЦЦЫ!",
   "— ДА ОТКРЫВАЙТЕ УЖЕ, ТАМ КОРМЯТ ТРИ РАЗА В ДЕНЬ, А ДНЕМ ВАБЩЕ СОНЧАС!",
-  "— СКОЛЬКО, ГОВОРИШЬ, ММР У ТЕБЯ?",
-  "— ЗАКРОЙ ГЛАЗА, ОТКРОЙ ДВЕРЬ :)"
+  "— Я ТЯН, ПРУФОВ НЕ БУДЕТ?",
+  "— ЗАКРОЙ ГЛАЗА, ОТКРОЙ ДВЕРЬ, КЕ-КЕ-КЕ"
 ];
 
 let leftAnswers = [
@@ -32,7 +36,16 @@ let leftAnswers = [
 ];
 
 
-//bot.on('message', msg => bot.sendMessage(msg.chat.id, regAnswers[getRandomInt(regAnswers.length)] ) );
+bot.onText(/\/pnh/, msg => {
+  if (heComes) bot.sendMessage(msg.chat.id, leftAnswers[getRandomInt(leftAnswers.length)]);
+  heComes = false;
+});
+
+
+bot.on('message', msg => {
+  if (getRandomInt(20) == 1) heComes = true;
+  if (heComes) bot.sendMessage(msg.chat.id, regAnswers[getRandomInt(regAnswers.length)]);
+});
 
 
 bot.onText(/\/aaaaa/, msg => {
@@ -40,11 +53,6 @@ bot.onText(/\/aaaaa/, msg => {
   
   otchisList[r].count++;
   bot.sendMessage(msg.chat.id, `${otchisList[r].name.toUpperCase()}! ВЫ — РЯДОВОЙ!`);
-});
-
-
-bot.onText(/\/pnh/, msg => {
-  bot.sendMessage(msg.chat.id,'under conscruction' )
 });
 
 
