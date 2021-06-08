@@ -51,8 +51,8 @@ bot.onText(/\/otchislen/, msg => {
 
 
 bot.onText(/\/spisok/, msg => {
-  const fixCountWord = a => Math.floor(a/10)==1 || a%10<2 || a%10>4 ? ` раз` : ` раза` ;
-  const otchislenListGen = item => `• ${item.name} — <i>${item.count + fixCountWord(item.count)}!</i>`;
+  const setCountWord = a => Math.floor(a/10)==1 || a%10<2 || a%10>4 ? `раз` : `раза` ;
+  const otchislenListGen = item => `• ${item.name} — <i>${item.count} ${setCountWord(item.count)}!</i>`;
   
   bot.sendMessage(msg.chat.id, otchislenList.map(otchislenListGen).join('\n'), {parse_mode: 'HTML'});
 });
