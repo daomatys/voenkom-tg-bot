@@ -1,30 +1,33 @@
 const tgBot = require('node-telegram-bot-api'); 
 const dotenv = require('dotenv').config();
+const database = require('better-sqlite3');
 
 const token = process.env.BOEHKOM_TOKEN;
 const bot = new tgBot(token, {polling: true});
 
+const db = new database('database.db', {verbose: console.log});
+const dbRead = db.prepare('SELECT name, count FROM otchisBase');
+const dbUpdate = db.prepare('UPDATE otchisBase SET count = count + 1 WHERE id = :id');
+const dbWrite = db.prepare('INSERT INTO otchisBase (id, name, count) VALUES (:id, :name, :count)');
+
+const dbUpdateTran = db.transaction(item => dbUpdate.run(item));
+const dbWriteTran = db.transaction(item => dbWrite.run(item));
+
 const getRandomInt = max => Math.floor( Math.random() * Math.floor(max) );
 
 
-let otchisList = [
-  {name: 'balls', count: 2},
-  {name: 'kirsosichka', count: 24},
-  {name: 'yobaneim', count: 15}
-];
+let otchisList = dbRead.all();
 
 let heComes = false;
 
 let regAnswers = [
   "— ОТКРОЙТЕ, А ТО В АРМИЮ ЗАБЕРУ!",
   "*DOOR INTENSIFIES*",
-  //"— О, ЭТО ВЫ УДАЧНО ДВЕРКУ ОСТАВИЛИ!",
   "*БУМ-БУМ-БУМ-ДЫЩ-ДЫН-БАЦ*",
   "— СЫНОЧКА, ОТКРЫВАЙ, ЭТО МАМА ПРИШЛА С ПРОДУКТАМИ!",
   "*ЗВУКИ ПОДСЛУШИВАНИЯ ВХОДНОЙ ДВЕРИ*",
   "— ТУК-ТУК, ДОСТАВКА ПИЦЦЫ, КОТОРУЮ ВЫ НЕ ЗАКАЗЫВАЛИ! ПОДАРОЧНОЙ ПИЦЦЫ!",
   "— ДА ОТКРЫВАЙТЕ УЖЕ, ТАМ КОРМЯТ ТРИ РАЗА В ДЕНЬ, А ДНЕМ ВАБЩЕ СОНЧАС!",
-  "— Я ТЯН, ПРУФОВ НЕ БУДЕТ?",
   "— ЗАКРОЙ ГЛАЗА, ОТКРОЙ ДВЕРЬ, КЕ-КЕ-КЕ"
 ];
 
@@ -42,17 +45,18 @@ bot.onText(/\/pnh/, msg => {
 });
 
 
-bot.on('message', msg => {
+bot.onText(/^[^/]/, msg => {
   if (getRandomInt(20) == 1) heComes = true;
   if (heComes) bot.sendMessage(msg.chat.id, regAnswers[getRandomInt(regAnswers.length)]);
 });
 
 
 bot.onText(/\/aaaaa/, msg => {
-  const r = getRandomInt(otchisList.length);
+  const r = getRandomInt(otchisList.length) + 1;
   
-  otchisList[r].count++;
-  bot.sendMessage(msg.chat.id, `${otchisList[r].name.toUpperCase()}! ВЫ — РЯДОВОЙ!`);
+  dbUpdateTran( {id: r} )
+  otchisList[r - 1].count++;
+  bot.sendMessage(msg.chat.id, `${otchisList[r - 1].name.toUpperCase()}! ВЫ — РЯДОВОЙ!`);
 });
 
 
@@ -60,7 +64,8 @@ bot.onText(/\/otchis/, msg => {
   if (otchisList.some(item => item.name == msg.from.username)) {
     bot.sendMessage(msg.chat.id, `ВТОРОЙ РАЗ НЕ ПРИЗЫВАЮТ, БОЛВАН!`);
   } else {
-    otchisList.push({name: msg.from.username, count: 0});
+    dbWriteTran( {id: otchisList.length + 1, name: msg.from.username, count: 0} );
+    otchisList.push( {id: otchisList.length + 1, name: msg.from.username, count: 0} );
     bot.sendMessage(msg.chat.id, `АХАХАХАХАХА, УВИДИМСЯ, @${msg.from.username.toUpperCase()}!`);
   }
 });
