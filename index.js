@@ -22,10 +22,10 @@ const getRandomInt = max => Math.floor( Math.random() * Math.floor(max) ); //[0,
 const getRandomAnswer = (a, i) => a.get({id: getRandomInt(i)}).answer;
 
 const setCountWord = a => (Math.floor(a / 10) == 1) || (a % 10 < 2) || (a % 10 > 4) ? `раз` : `раза` ;
-const otchisListTitle = `ЛИЧНЫЙ СОСТАВ В/Ч 1337\nЗАЩИТИЛ САПОГИ:\n\n`;
 
 
 let otchisList = dbRead.all();
+let callLimiterByDate = '';
 let heComes = false;
 
 
@@ -37,17 +37,24 @@ bot.onText(/\/pnh/, msg => {
 bot.onText(/^[^/]/, msg => {
   if (heComes) bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer(dbAnswersRegular, 8) + '!</i>', {parse_mode: 'HTML'} );
   if (getRandomInt(20) == 1) {
-    bot.sendMessage( msg.chat.id, '<b>*' + getRandomAnswer(dbAnswersSpawn, 8) + '*</b>', {parse_mode: 'HTML'} );
+    bot.sendMessage( msg.chat.id, '<b>*' + getRandomAnswer(dbAnswersSpawn, 10) + '*</b>', {parse_mode: 'HTML'} );
     heComes = true;
   }
 });
 
 bot.onText(/\/aaaaa/, msg => {
-  const r = getRandomInt(otchisList.length) + 1;
-  
-  dbUpdateTran( {id: r} );
-  otchisList[r - 1].count++;
-  bot.sendMessage( msg.chat.id, `${otchisList[r - 1].name.toUpperCase()}! ВЫ — РЯДОВОЙ!` );
+  if (msg.date > callLimiterByDate + 4300) {
+    const r = getRandomInt(otchisList.length) + 1;
+    
+    callLimiterByDate = msg.date;
+    console.log(callLimiterByDate)
+    dbUpdateTran( {id: r} );
+    otchisList[r - 1].count++;
+    
+    bot.sendMessage( msg.chat.id, `${otchisList[r - 1].name.toUpperCase()}! ВЫ — РЯДОВОЙ!` );
+  } else {
+    bot.sendMessage( msg.chat.id, `…` );
+  }
 });
 
 bot.onText(/\/otchis/, msg => {
@@ -61,7 +68,9 @@ bot.onText(/\/otchis/, msg => {
 });
 
 bot.onText(/\/spisok/, msg => {
+  const otchisListTitle = `ЛИЧНЫЙ СОСТАВ В/Ч 1337\nЗАЩИТИЛ САПОГИ:\n\n`;
   const otchisListBody = otchisList.map(item => `• ${item.name} — ${item.count} ${setCountWord(item.count)}!`).join('\n');
+  
   bot.sendMessage( msg.chat.id, '<code>' + otchisListTitle + otchisListBody + '</code>', {parse_mode: 'HTML'} );
 });
 
