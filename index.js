@@ -28,15 +28,15 @@ let callLimiterByDate = 0;
 
 
 bot.onText(/\/pnh/, msg => {
-  if (heComes) bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer(dbAnswersQuit, 8) + '!</i>', {parse_mode: 'HTML'} );
+  if (heComes) bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer(dbAnswersQuit, 11) + '!</i>', {parse_mode: 'HTML'} );
   heComes = false;
 });
 
 
 bot.onText(/^[^/]/, msg => {
-  if (heComes) bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer(dbAnswersRegular, 8) + '!</i>', {parse_mode: 'HTML'} );
+  if (heComes) bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer(dbAnswersRegular, 29) + '!</i>', {parse_mode: 'HTML'} );
   if (getRandomInt(20) == 1) {
-    bot.sendMessage( msg.chat.id, '<b>*' + getRandomAnswer(dbAnswersSpawn, 10) + '*</b>', {parse_mode: 'HTML'} );
+    bot.sendMessage( msg.chat.id, '<b>*' + getRandomAnswer(dbAnswersSpawn, 14) + '*</b>', {parse_mode: 'HTML'} );
     heComes = true;
   }
 });
@@ -47,9 +47,11 @@ bot.onText(/\/aaaaa/, msg => {
     const r = getRandomInt(dbOtchisListLength) + 1;
     const recruitName = dbOtchisList.get({id: r}).name.toUpperCase();
     
-    dbUpdateTran( {id: r} );
+    dbUpdateTran({id: r});
     callLimiterByDate = msg.date;
-    bot.sendMessage( msg.chat.id, `${recruitName}! ВЫ — РЯДОВОЙ!` );
+    bot.sendMessage( msg.chat.id, `<i>— @${recruitName}, ВЫ ТЕРЬ РЯДОВОЙ! НА ПЛАЦ БЕГОМ МАРШ!!!!!!! МВА-ХА-ХА-ХА-ХА!!</i>`, {parse_mode: 'HTML'} );
+  } else {
+    bot.sendMessage( msg.chat.id, `<i>— НА СЕГОДНЯ ПРИЗЫВ ОКОНЧЕН!</i>`, {parse_mode: 'HTML'} )
   }
 });
 
@@ -60,9 +62,9 @@ bot.onText(/\/otchislen/, msg => {
     
     if (item.name != msg.from.username) {
       dbWriteTran( {id: dbOtchisListLength + 1, name: msg.from.username, count: 0} );
-      bot.sendMessage( msg.chat.id, `АХАХАХАХАХА, УВИДИМСЯ, @${msg.from.username.toUpperCase()}!` );
+      bot.sendMessage( msg.chat.id, `<i>— МВА-ХА-ХА-ХА-ХА. ДОБРО ПОЖАЛОВАТЬ В АД, @${msg.from.username.toUpperCase()}!</i>` , {parse_mode: 'HTML'} );
     } else {
-      bot.sendMessage(msg.chat.id, `ВТОРОЙ РАЗ НЕ ПРИЗЫВАЮТ, БОЛВАН!`);
+      bot.sendMessage( msg.chat.id, `<i>— ВТОРОЙ РАЗ НЕ ПРИЗЫВАЮТ, И-ДИ-ОТ!</i>`, {parse_mode: 'HTML'} );
       break;
     }
   }
