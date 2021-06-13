@@ -15,7 +15,6 @@ const dbListWriteTran = db.transaction(item => dbListWrite.run(item));
 const dbStory = db.prepare('INSERT INTO coolStorage (id, text) VALUES (:id, :text)');
 const dbStoryTran = db.transaction(item => dbStory.run(item));
 const dbStoryRead = db.prepare('SELECT text FROM coolStorage WHERE id = :id');
-const dbStoryLength = db.prepare('SELECT * FROM coolStorage ORDER BY id DESC LIMIT 1;').get().id;
 
 const dbAntiClone = db.prepare('SELECT id FROM otchisList WHERE name = :name');
 const dbAnswers = k => db.prepare('SELECT answer FROM answers' + k + ' WHERE id = :id');
@@ -25,7 +24,9 @@ const getRandomAnswer = (k, r) => dbAnswers(k).get({id: getRandomInt(r)}).answer
 
 const setCountWord = a => (Math.floor(a / 10) == 1) || (a % 10 < 2) || (a % 10 > 4) ? `раз` : `раза` ;
 
-let dbListLength = db.prepare('SELECT id FROM otchisList').all().length;
+let dbStoryLength = db.prepare('SELECT * FROM coolStorage ORDER BY id DESC LIMIT 1;').get().id + 1;
+let dbListLength = db.prepare('SELECT * FROM otchisList ORDER BY id DESC LIMIT 1;').get().id + 1;
+
 let callLimiterByDate = 0;
 let heComes = false;
 let recruitName;
@@ -101,6 +102,8 @@ bot.onText(/\/coolstory/, msg => {
 
 bot.onText(/\/import/, msg => {
   const url = '';
+  let randomStoriesPack;
+  
   JSDOM.fromURL(url).then( dom => {
     randomStoriesPack = dom
       .window
@@ -110,6 +113,7 @@ bot.onText(/\/import/, msg => {
     for (let i = 0; i < randomStoriesPack.length; i++) 
       dbStoryTran({id: i, text: randomStoriesPack.item(i).innerHTML});
   });
+  dbStoryLength += randomStoriesPack.length;
 });
 
 
