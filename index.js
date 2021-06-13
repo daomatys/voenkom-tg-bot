@@ -25,7 +25,6 @@ const getRandomAnswer = (k, r) => dbAnswers(k).get({id: getRandomInt(r)}).answer
 
 const setCountWord = a => (Math.floor(a / 10) == 1) || (a % 10 < 2) || (a % 10 > 4) ? `раз` : `раза` ;
 
-
 let dbListLength = db.prepare('SELECT id FROM otchisList').all().length;
 let callLimiterByDate = 0;
 let heComes = false;
@@ -54,7 +53,9 @@ bot.onText(/\/aaaa/, msg => {
   if (msg.date > callLimiterByDate + 43200) {
     
     callLimiterByDate = msg.date;
+    
     dbListUpdateTran({id: r});
+    
     recruitName = dbList.get({id: r}).name.toUpperCase();
     
     bot.sendMessage( msg.chat.id, `<i>— @${recruitName}, ВЫ ТЕРЬ РЯДОВОЙ! НА ПЛАЦ БЕГОМ МАРШ!!!!!!!</i>`, {parse_mode: 'HTML'} );
@@ -68,7 +69,9 @@ bot.onText(/\/otchislen/, msg => {
   if (dbAntiClone.get({name: msg.from.username}) === undefined) {
     
     dbListWriteTran( {id: dbListLength , name: msg.from.username, count: 0} );
+    
     dbListLength++;
+    
     recruitName = msg.from.username.toUpperCase();
     
     bot.sendMessage( msg.chat.id, `<i>— МВА-ХА-ХА-ХА-ХА. ДОБРО ПОЖАЛОВАТЬ В АД, @${recruitName}!</i>` , {parse_mode: 'HTML'} );
@@ -98,14 +101,14 @@ bot.onText(/\/coolstory/, msg => {
 
 bot.onText(/\/import/, msg => {
   const url = '';
-  
   JSDOM.fromURL(url).then( dom => {
     randomStoriesPack = dom
       .window
       .document
       .getElementById('mw-content-text')
       .getElementsByTagName('p');
-    for (let i = 0; i < randomStoriesPack.length; i++) dbStoryTran({id: i, text: randomStoriesPack.item(i).innerHTML});
+    for (let i = 0; i < randomStoriesPack.length; i++) 
+      dbStoryTran({id: i, text: randomStoriesPack.item(i).innerHTML});
   });
 });
 
