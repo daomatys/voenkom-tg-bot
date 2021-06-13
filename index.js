@@ -18,15 +18,16 @@ const dbStoryRead = db.prepare('SELECT text FROM coolStorage WHERE id = :id');
 const dbStoryLength = db.prepare('SELECT * FROM coolStorage ORDER BY id DESC LIMIT 1;').get().id;
 
 const dbAnswers = k => db.prepare('SELECT answer FROM answers' + k + ' WHERE id = :id');
+const dbAntiClone = db.prepare('SELECT id FROM otchisList WHERE name = :name');
 
 const getRandomInt = max => Math.floor(Math.random() * Math.floor(max)); //[0, max)
-const getRandomAnswer = (k, i) => dbAnswers(k).get({id: getRandomInt(i)}).answer;
+const getRandomAnswer = (k, r) => dbAnswers(k).get({id: getRandomInt(r)}).answer;
 
 const setCountWord = a => (Math.floor(a / 10) == 1) || (a % 10 < 2) || (a % 10 > 4) ? `раз` : `раза` ;
 
-let dbOtchisList = db.prepare('SELECT name, count FROM otchisList WHERE id = :id');
-let dbOtchisListLength = db.prepare('SELECT id FROM otchisList').all().length;
+const dbOtchisList = db.prepare('SELECT name, count FROM otchisList WHERE id = :id');
 
+let dbOtchisListLength = db.prepare('SELECT id FROM otchisList').all().length;
 let heComes = false;
 let callLimiterByDate = 0;
 
@@ -48,7 +49,7 @@ bot.onText(/^[^/]/, msg => {
 
 bot.onText(/\/aaaaa/, msg => {
   if (msg.date > callLimiterByDate + 43200) {
-    const r = getRandomInt(dbOtchisListLength) + 1;
+    const r = getRandomInt(dbOtchisListLength);
     const recruitName = dbOtchisList.get({id: r}).name.toUpperCase();
     
     dbUpdateTran({id: r});
@@ -60,17 +61,13 @@ bot.onText(/\/aaaaa/, msg => {
 });
 
 
-bot.onText(/\/otchislen/, msg => { //doesnt work properly
-  for (let i = 1; i <= dbOtchisListLength; i++) {
-    let item = dbOtchisList.get({id: i});
-    
-    if (item.name != msg.from.username) {
-      dbWriteTran( {id: dbOtchisListLength + 1, name: msg.from.username, count: 0} );
-      bot.sendMessage( msg.chat.id, `<i>— МВА-ХА-ХА-ХА-ХА. ДОБРО ПОЖАЛОВАТЬ В АД, @${msg.from.username.toUpperCase()}!</i>` , {parse_mode: 'HTML'} );
-    } else {
-      bot.sendMessage( msg.chat.id, `<i>— ВТОРОЙ РАЗ НЕ ПРИЗЫВАЮТ, И-ДИ-ОТ!</i>`, {parse_mode: 'HTML'} );
-      break;
-    }
+bot.onText(/\/otchislen/, msg => { 
+  if (dbAntiClone.get({name: msg.from.username}) === undefined) {
+    dbWriteTran( {id: dbOtchisListLength , name: msg.from.username, count: 0} );
+    dbOtchisListLength++;
+    bot.sendMessage( msg.chat.id, `<i>— МВА-ХА-ХА-ХА-ХА. ДОБРО ПОЖАЛОВАТЬ В АД, @${msg.from.username.toUpperCase()}!</i>` , {parse_mode: 'HTML'} );
+  } else {
+    bot.sendMessage( msg.chat.id, `<i>— ВТОРОЙ РАЗ НЕ ПРИЗЫВАЮТ, И-ДИ-ОТ!</i>`, {parse_mode: 'HTML'} );
   }
 });
 
@@ -79,7 +76,7 @@ bot.onText(/\/spisok/, msg => {
   let otchisListTitle = `ЛИЧНЫЙ СОСТАВ В/Ч 1337\nЗАЩИТИЛ САПОГИ:\n\n`;
   let otchisListBody = '';
   
-  for (let i = 1; i <= dbOtchisListLength; i++) {
+  for (let i = 0; i < dbOtchisListLength; i++) {
     let item = dbOtchisList.get({id: i});
     otchisListBody += `• ${item.name} — ${item.count} ${setCountWord(item.count)}!\n`;
   }
