@@ -1,6 +1,7 @@
 const tgBot = require('node-telegram-bot-api'); 
 const dotenv = require('dotenv').config();
 const database = require('better-sqlite3');
+const { JSDOM } = require('jsdom');
 
 const bot = new tgBot(process.env.BOEHKOM_TOKEN, {polling: true});
 const db = new database('database.db', {verbose: console.log});
@@ -8,9 +9,7 @@ const db = new database('database.db', {verbose: console.log});
 const dbOtchisList = db.prepare('SELECT name, count FROM otchisList WHERE id = :id');
 const dbOtchisListLength = db.prepare('SELECT id FROM otchisList').all().length;
 
-const dbAnswersQuit = db.prepare('SELECT answer FROM answersQuit WHERE id = :id');
-const dbAnswersSpawn = db.prepare('SELECT answer FROM answersSpawn WHERE id = :id');
-const dbAnswersRegular = db.prepare('SELECT answer FROM answersRegular WHERE id = :id');
+const dbAnswers = k => db.prepare('SELECT answer FROM answers' + k + ' WHERE id = :id');
 
 const dbUpdate = db.prepare('UPDATE otchisList SET count = count + 1 WHERE id = :id');
 const dbUpdateTran = db.transaction(item => dbUpdate.run(item));
@@ -28,15 +27,15 @@ let callLimiterByDate = 0;
 
 
 bot.onText(/\/pnh/, msg => {
-  if (heComes) bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer(dbAnswersQuit, 11) + '!</i>', {parse_mode: 'HTML'} );
+  if (heComes) bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer(dbAnswers('Quit'), 11) + '!</i>', {parse_mode: 'HTML'} );
   heComes = false;
 });
 
 
 bot.onText(/^[^/]/, msg => {
-  if (heComes) bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer(dbAnswersRegular, 29) + '!</i>', {parse_mode: 'HTML'} );
+  if (heComes) bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer(dbAnswers('Regular'), 29) + '!</i>', {parse_mode: 'HTML'} );
   if (getRandomInt(20) == 1) {
-    bot.sendMessage( msg.chat.id, '<b>*' + getRandomAnswer(dbAnswersSpawn, 14) + '*</b>', {parse_mode: 'HTML'} );
+    bot.sendMessage( msg.chat.id, '<b>*' + getRandomAnswer(dbAnswers('Spawn'), 14) + '*</b>', {parse_mode: 'HTML'} );
     heComes = true;
   }
 });
@@ -80,6 +79,25 @@ bot.onText(/\/spisok/, msg => {
     otchisListBody += `• ${item.name} — ${item.count} ${setCountWord(item.count)}!\n`;
   }
   bot.sendMessage( msg.chat.id, '<code>' + otchisListTitle + otchisListBody + '</code>', {parse_mode: 'HTML'} );
+});
+
+
+bot.onText(/\/coolstory/, msg => {
+  const url = 'https://lurkmore.to/%D0%9A%D0%BE%D0%BF%D0%B8%D0%BF%D0%B0%D1%81%D1%82%D0%B0:%D0%90%D1%80%D0%BC%D0%B8%D1%8F'
+  
+  JSDOM.fromURL(url).then( dom => {
+    randomStoriesPack = dom
+      .window
+      .document
+      .getElementById('mw-content-text')
+      .getElementsByTagName('p');
+    console.log(randomStoriesPack.innerHTML)
+    randomStory = randomStoriesPack
+      .item(getRandomInt(randomStoriesPack.length))
+      .innerHTML;
+  })
+  
+  bot.sendMessage( msg.chat.id, '<i>— ' + randomStory + '</i>', {parse_mode: 'HTML'} );
 });
 
 

@@ -12,6 +12,7 @@
   "dependencies": {
     "better-sqlite3": "^7.4.1",
     "dotenv": "^10.0.0",
+    "jsdom": "^16.6.0",
     "node-telegram-bot-api": "0.53.0"
   }
 }
