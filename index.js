@@ -29,10 +29,12 @@ const setCountWord = a => (Math.floor(a / 10) == 1) || (a % 10 < 2) || (a % 10 >
 let dbListLength = db.prepare('SELECT id FROM otchisList').all().length;
 let callLimiterByDate = 0;
 let heComes = false;
+let recruitName;
 
 
 bot.onText(/^[^/]/, msg => {
-  if (heComes) bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer('Regular', 28) + '!</i>', {parse_mode: 'HTML'} );
+  if (heComes) 
+    bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer('Regular', 28) + '!</i>', {parse_mode: 'HTML'} );
   if (getRandomInt(20) == 1) {
     bot.sendMessage( msg.chat.id, '<b>*' + getRandomAnswer('Spawn', 14) + '*</b>', {parse_mode: 'HTML'} );
     heComes = true;
@@ -41,18 +43,20 @@ bot.onText(/^[^/]/, msg => {
 
 
 bot.onText(/\/pnh/, msg => {
-  if (heComes) bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer('Quit', 11) + '!</i>', {parse_mode: 'HTML'} );
+  if (heComes) 
+    bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer('Quit', 11) + '!</i>', {parse_mode: 'HTML'} );
   heComes = false;
 });
 
 
 bot.onText(/\/aaaa/, msg => {
+  const r = getRandomInt(dbListLength);
   if (msg.date > callLimiterByDate + 43200) {
-    const r = getRandomInt(dbListLength);
-    const recruitName = dbList.get({id: r}).name.toUpperCase();
     
-    dbListUpdateTran({id: r});
     callLimiterByDate = msg.date;
+    dbListUpdateTran({id: r});
+    recruitName = dbList.get({id: r}).name.toUpperCase();
+    
     bot.sendMessage( msg.chat.id, `<i>— @${recruitName}, ВЫ ТЕРЬ РЯДОВОЙ! НА ПЛАЦ БЕГОМ МАРШ!!!!!!!</i>`, {parse_mode: 'HTML'} );
   } else {
     bot.sendMessage( msg.chat.id, `<i>— НА СЕГОДНЯ ПРИЗЫВ ОКОНЧЕН!</i>`, {parse_mode: 'HTML'} )
@@ -62,10 +66,11 @@ bot.onText(/\/aaaa/, msg => {
 
 bot.onText(/\/otchislen/, msg => { 
   if (dbAntiClone.get({name: msg.from.username}) === undefined) {
-    const recruitName = msg.from.username.toUpperCase();
     
     dbListWriteTran( {id: dbListLength , name: msg.from.username, count: 0} );
     dbListLength++;
+    recruitName = msg.from.username.toUpperCase();
+    
     bot.sendMessage( msg.chat.id, `<i>— МВА-ХА-ХА-ХА-ХА. ДОБРО ПОЖАЛОВАТЬ В АД, @${recruitName}!</i>` , {parse_mode: 'HTML'} );
   } else {
     bot.sendMessage( msg.chat.id, `<i>— ВТОРОЙ РАЗ НЕ ПРИЗЫВАЮТ, И-ДИ-ОТ!</i>`, {parse_mode: 'HTML'} );
@@ -87,7 +92,6 @@ bot.onText(/\/spisok/, msg => {
 
 bot.onText(/\/coolstory/, msg => {
   const randomStory = dbStoryRead.get({id: getRandomInt(dbStoryLength)}).text;
-  
   bot.sendMessage( msg.chat.id, '<i>— ' + randomStory + '</i>', {parse_mode: 'HTML'} );
 });
 
