@@ -6,36 +6,41 @@ const { JSDOM } = require('jsdom');
 const bot = new tgBot(process.env.BOEHKOM_TOKEN, {polling: true});
 const db = new database('database.db', {verbose: console.log});
 
-const dbOtchisList = db.prepare('SELECT name, count FROM otchisList WHERE id = :id');
-const dbOtchisListLength = db.prepare('SELECT id FROM otchisList').all().length;
-
-const dbAnswers = k => db.prepare('SELECT answer FROM answers' + k + ' WHERE id = :id');
-
 const dbUpdate = db.prepare('UPDATE otchisList SET count = count + 1 WHERE id = :id');
 const dbUpdateTran = db.transaction(item => dbUpdate.run(item));
 
 const dbWrite = db.prepare('INSERT INTO otchisList (id, name, count) VALUES (:id, :name, :count)');
 const dbWriteTran = db.transaction(item => dbWrite.run(item));
 
+const dbStory = db.prepare('INSERT INTO coolStorage (id, text) VALUES (:id, :text)');
+const dbStoryTran = db.transaction(item => dbStory.run(item));
+const dbStoryRead = db.prepare('SELECT text FROM coolStorage WHERE id = :id');
+const dbStoryLength = db.prepare('SELECT * FROM coolStorage ORDER BY id DESC LIMIT 1;').get().id;
+
+const dbAnswers = k => db.prepare('SELECT answer FROM answers' + k + ' WHERE id = :id');
+
 const getRandomInt = max => Math.floor(Math.random() * Math.floor(max)); //[0, max)
-const getRandomAnswer = (a, i) => a.get({id: getRandomInt(i)}).answer;
+const getRandomAnswer = (k, i) => dbAnswers(k).get({id: getRandomInt(i)}).answer;
 
 const setCountWord = a => (Math.floor(a / 10) == 1) || (a % 10 < 2) || (a % 10 > 4) ? `раз` : `раза` ;
+
+let dbOtchisList = db.prepare('SELECT name, count FROM otchisList WHERE id = :id');
+let dbOtchisListLength = db.prepare('SELECT id FROM otchisList').all().length;
 
 let heComes = false;
 let callLimiterByDate = 0;
 
 
 bot.onText(/\/pnh/, msg => {
-  if (heComes) bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer(dbAnswers('Quit'), 11) + '!</i>', {parse_mode: 'HTML'} );
+  if (heComes) bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer('Quit', 11) + '!</i>', {parse_mode: 'HTML'} );
   heComes = false;
 });
 
 
 bot.onText(/^[^/]/, msg => {
-  if (heComes) bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer(dbAnswers('Regular'), 29) + '!</i>', {parse_mode: 'HTML'} );
+  if (heComes) bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer('Regular', 28) + '!</i>', {parse_mode: 'HTML'} );
   if (getRandomInt(20) == 1) {
-    bot.sendMessage( msg.chat.id, '<b>*' + getRandomAnswer(dbAnswers('Spawn'), 14) + '*</b>', {parse_mode: 'HTML'} );
+    bot.sendMessage( msg.chat.id, '<b>*' + getRandomAnswer('Spawn', 14) + '*</b>', {parse_mode: 'HTML'} );
     heComes = true;
   }
 });
@@ -55,7 +60,7 @@ bot.onText(/\/aaaaa/, msg => {
 });
 
 
-bot.onText(/\/otchislen/, msg => {
+bot.onText(/\/otchislen/, msg => { //doesnt work properly
   for (let i = 1; i <= dbOtchisListLength; i++) {
     let item = dbOtchisList.get({id: i});
     
@@ -78,12 +83,13 @@ bot.onText(/\/spisok/, msg => {
     let item = dbOtchisList.get({id: i});
     otchisListBody += `• ${item.name} — ${item.count} ${setCountWord(item.count)}!\n`;
   }
+  
   bot.sendMessage( msg.chat.id, '<code>' + otchisListTitle + otchisListBody + '</code>', {parse_mode: 'HTML'} );
 });
 
 
-bot.onText(/\/coolstory/, msg => {
-  const url = 'https://lurkmore.to/%D0%9A%D0%BE%D0%BF%D0%B8%D0%BF%D0%B0%D1%81%D1%82%D0%B0:%D0%90%D1%80%D0%BC%D0%B8%D1%8F'
+bot.onText(/\/import/, msg => {
+  const url = '';
   
   JSDOM.fromURL(url).then( dom => {
     randomStoriesPack = dom
@@ -91,11 +97,13 @@ bot.onText(/\/coolstory/, msg => {
       .document
       .getElementById('mw-content-text')
       .getElementsByTagName('p');
-    console.log(randomStoriesPack.innerHTML)
-    randomStory = randomStoriesPack
-      .item(getRandomInt(randomStoriesPack.length))
-      .innerHTML;
+    for (let i = 0; i < randomStoriesPack.length; i++) dbStoryTran({id: i, text: randomStoriesPack.item(i).innerHTML});
   })
+});
+
+
+bot.onText(/\/coolstory/, msg => {
+  const randomStory = dbStoryRead.get({id: getRandomInt(dbStoryLength)}).text;
   
   bot.sendMessage( msg.chat.id, '<i>— ' + randomStory + '</i>', {parse_mode: 'HTML'} );
 });
