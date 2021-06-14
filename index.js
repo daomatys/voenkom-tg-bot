@@ -34,7 +34,6 @@ let dbTalesLength = dbAnyTableLength('tales');
 
 let callLimiterByDate = 0;
 let heComes = false;
-let recruitName;
 
 
 bot.onText(/^[^/]/, msg => {
@@ -42,45 +41,42 @@ bot.onText(/^[^/]/, msg => {
     bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer('Regular', 28) + '!</i>', {parse_mode: 'HTML'} );
   }
   if (getRandomInt(20) == 1) {
-    bot.sendMessage( msg.chat.id, '<b>*' + getRandomAnswer('Spawn', 14) + '*</b>', {parse_mode: 'HTML'} );
     heComes = true;
+    bot.sendMessage( msg.chat.id, '<b>*' + getRandomAnswer('Spawn', 14) + '*</b>', {parse_mode: 'HTML'} );
   }
 });
 
 
 bot.onText(/\/pnh/, msg => {
   if (heComes) {
+    heComes = false;
     bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer('Quit', 11) + '!</i>', {parse_mode: 'HTML'} );
   }
-  heComes = false;
 });
 
 
 bot.onText(/\/aaaa/, msg => {
-  const r = getRandomInt( dbRecruitsLength );
-  
-  recruitName = dbRecruits.get( {id: r} ).name.toUpperCase();
-  
-  if (msg.date > callLimiterByDate + 43200) {
+  if (msg.date > callLimiterByDate + 3600) {
+    const r = getRandomInt( dbRecruitsLength );
+    const privateName = dbRecruits.get( {id: r} ).name.toUpperCase();
     
     callLimiterByDate = msg.date;
-    
     dbRecruitsUpdateTran( {id: r} );
     
-    bot.sendMessage( msg.chat.id, `<i>— @${recruitName}, ВЫ ТЕРЬ РЯДОВОЙ! ПО МАШИНАМ!!! БЕГОМ МА-А-АРШ!!!!</i>`, {parse_mode: 'HTML'} );
+    bot.sendMessage( msg.chat.id, `<i>— @${privateName}, ВЫ ТЕРЬ РЯДОВОЙ! ПО МАШИНАМ!!! БЕГО-О-ОМ МА-А-А-АРШ!!!!</i>`, {parse_mode: 'HTML'} );
   } else {
-    bot.sendMessage( msg.chat.id, `<i>— В УАЗИК ПОМЕЩАЕТСЯ ТОЛЬКО ОДИН ПРИЗЫВНИК! ЗА ОСТАЛЬНЫМИ ПОЗЖЕ ЗАЕДУ!</i>`, {parse_mode: 'HTML'} )
+    bot.sendMessage( msg.chat.id, `<i>— В УАЗИК ПОМЕЩАЕТСЯ ТОЛЬКО ОДИН ПРИЗЫВНИК! ЗА ОСТАЛЬНЫМИ ЧЕРЕЗ ЧАС ВЕРНУСЬ, ХЕ-ХЕ!</i>`, {parse_mode: 'HTML'} )
   }
 });
 
 
 bot.onText(/\/otchislen/, msg => { 
-  recruitName = msg.from.username.toUpperCase()
+  const recruitNameOps = msg.from.username;
+  const recruitName = recruitNameOps.toUpperCase();
   
-  if (dbRecruitsFindClone.get( {name: msg.from.username} ) === undefined) {
+  if (dbRecruitsFindClone.get( {name: recruitNameOps} ) === undefined) {
     
-    dbRecruitsWriteTran( {id: dbRecruitsLength , name: msg.from.username, count: 0} );
-    
+    dbRecruitsWriteTran( {id: dbRecruitsLength , name: recruitNameOps, count: 0} );
     dbRecruitsLength++;
     
     bot.sendMessage( msg.chat.id, `<i>— ОЖИДАЙТЕ ПОВЕСТОЧКИ, @${recruitName}!</i>` , {parse_mode: 'HTML'} );
@@ -98,6 +94,7 @@ bot.onText(/\/spisok/, msg => {
     let item = dbRecruits.get( {id: i} );
     dbRecruitsList += `• ${item.name} — ${item.count} ${setCountWord(item.count)}!\n`;
   }
+  
   bot.sendMessage( msg.chat.id, '<code>' + dbRecruitsTitle + dbRecruitsList + '</code>', {parse_mode: 'HTML'} );
 });
 
@@ -119,9 +116,11 @@ bot.onText(/\/import/, msg => {
       .getElementById('mw-content-text')
       .getElementsByTagName('p');
       
-    for (let i = 0; i < urlTalesPack.length; i++) 
+    for (let i = 0; i < urlTalesPack.length; i++) {
       dbTalesTran( {id: i, text: urltalesPack.item(i).innerHTML} );
+    }
   });
+  
   dbTalesLength += urlTalesPack.length;
 });
 
