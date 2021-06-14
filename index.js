@@ -6,26 +6,31 @@ const { JSDOM } = require('jsdom');
 const bot = new tgBot( process.env.BOEHKOM_TOKEN, {polling: true} );
 const db = new database( 'database.db', {verbose: console.log} );
 
-const dbList = db.prepare('SELECT name, count FROM otchisList WHERE id = :id');
-const dbListUpdate = db.prepare('UPDATE otchisList SET count = count + 1 WHERE id = :id');
-const dbListUpdateTran = db.transaction(item => dbListUpdate.run(item));
-const dbListWrite = db.prepare('INSERT INTO otchisList (id, name, count) VALUES (:id, :name, :count)');
-const dbListWriteTran = db.transaction(item => dbListWrite.run(item));
+const dbRecruits = db.prepare('SELECT name, count FROM recruits WHERE id = :id');
+const dbRecruitsUpdate = db.prepare('UPDATE recruits SET count = count + 1 WHERE id = :id');
+const dbRecruitsUpdateTran = db.transaction(item => dbRecruitsUpdate.run(item));
+const dbRecruitsWrite = db.prepare('INSERT INTO recruits (id, name, count) VALUES (:id, :name, :count)');
+const dbRecruitsWriteTran = db.transaction(item => dbRecruitsWrite.run(item));
+const dbRecruitsFindClone = db.prepare('SELECT id FROM recruits WHERE name = :name');
 
-const dbStory = db.prepare('INSERT INTO coolStorage (id, text) VALUES (:id, :text)');
-const dbStoryTran = db.transaction(item => dbStory.run(item));
-const dbStoryRead = db.prepare('SELECT text FROM coolStorage WHERE id = :id');
-
-const dbAntiClone = db.prepare('SELECT id FROM otchisList WHERE name = :name');
-const dbAnswers = k => db.prepare('SELECT answer FROM answers' + k + ' WHERE id = :id');
+const dbTales = db.prepare('INSERT INTO tales (id, text) VALUES (:id, :text)');
+const dbTalesTran = db.transaction(item => dbTales.run(item));
+const dbTalesRead = db.prepare('SELECT text FROM tales WHERE id = :id');
 
 const getRandomInt = max => Math.floor( Math.random() * Math.floor(max) ); //[0, max)
-const getRandomAnswer = (k, r) => dbAnswers(k).get( {id: getRandomInt(r)} ).answer;
+const getRandomAnswer = (k, r) => db
+  .prepare('SELECT answer FROM answers' + k + ' WHERE id = :id')
+  .get( {id: getRandomInt(r)} )
+  .answer;
 
 const setCountWord = a => (Math.floor(a / 10) == 1) || (a % 10 < 2) || (a % 10 > 4) ? `раз` : `раза` ;
+const dbAnyTableLength = k => db
+  .prepare('SELECT * FROM ' + k + ' ORDER BY id DESC LIMIT 1;')
+  .get()
+  .id + 1;
 
-let dbStoryLength = db.prepare('SELECT * FROM coolStorage ORDER BY id DESC LIMIT 1;').get().id + 1;
-let dbListLength = db.prepare('SELECT * FROM otchisList ORDER BY id DESC LIMIT 1;').get().id + 1;
+let dbRecruitsLength = dbAnyTableLength('recruits');
+let dbTalesLength = dbAnyTableLength('tales');
 
 let callLimiterByDate = 0;
 let heComes = false;
@@ -52,15 +57,15 @@ bot.onText(/\/pnh/, msg => {
 
 
 bot.onText(/\/aaaa/, msg => {
-  const r = getRandomInt( dbListLength );
+  const r = getRandomInt( dbRecruitsLength );
   
   if (msg.date > callLimiterByDate + 43200) {
     
     callLimiterByDate = msg.date;
     
-    dbListUpdateTran( {id: r} );
+    dbRecruitsUpdateTran( {id: r} );
     
-    recruitName = dbList.get( {id: r} ).name.toUpperCase();
+    recruitName = dbRecruits.get( {id: r} ).name.toUpperCase();
     
     bot.sendMessage( msg.chat.id, `<i>— @${recruitName}, ВЫ ТЕРЬ РЯДОВОЙ! НА ПЛАЦ БЕГОМ МАРШ!!!!!!!</i>`, {parse_mode: 'HTML'} );
   } else {
@@ -70,11 +75,11 @@ bot.onText(/\/aaaa/, msg => {
 
 
 bot.onText(/\/otchislen/, msg => { 
-  if (dbAntiClone.get( {name: msg.from.username} ) === undefined) {
+  if (dbRecruitsFindClone.get( {name: msg.from.username} ) === undefined) {
     
-    dbListWriteTran( {id: dbListLength , name: msg.from.username, count: 0} );
+    dbRecruitsWriteTran( {id: dbRecruitsLength , name: msg.from.username, count: 0} );
     
-    dbListLength++;
+    dbRecruitsLength++;
     
     recruitName = msg.from.username.toUpperCase();
     
@@ -86,38 +91,38 @@ bot.onText(/\/otchislen/, msg => {
 
 
 bot.onText(/\/spisok/, msg => {
-  const otchisListTitle = `ЛИЧНЫЙ СОСТАВ В/Ч 1337\nЗАЩИТИЛ САПОГИ:\n\n`;
-  let otchisListBody = '';
+  const dbRecruitsTitle = `ЛИЧНЫЙ СОСТАВ В/Ч 1337\nЗАЩИТИЛ САПОГИ:\n\n`;
+  let dbRecruitsList = '';
   
-  for (let i = 0; i < dbListLength; i++) {
-    let item = dbList.get( {id: i} );
-    otchisListBody += `• ${item.name} — ${item.count} ${setCountWord(item.count)}!\n`;
+  for (let i = 0; i < dbRecruitsLength; i++) {
+    let item = dbRecruits.get( {id: i} );
+    dbRecruitsList += `• ${item.name} — ${item.count} ${setCountWord(item.count)}!\n`;
   }
-  bot.sendMessage( msg.chat.id, '<code>' + otchisListTitle + otchisListBody + '</code>', {parse_mode: 'HTML'} );
+  bot.sendMessage( msg.chat.id, '<code>' + dbRecruitsTitle + dbRecruitsList + '</code>', {parse_mode: 'HTML'} );
 });
 
 
 bot.onText(/\/coolstory/, msg => {
-  const randomStory = dbStoryRead.get( {id: getRandomInt(dbStoryLength)} ).text;
+  const randomStory = dbTalesRead.get( {id: getRandomInt(dbTalesLength)} ).text;
   bot.sendMessage( msg.chat.id, '<i>— ' + randomStory + '</i>', {parse_mode: 'HTML'} );
 });
 
 
 bot.onText(/\/import/, msg => {
   const url = '';
-  let randomStoriesPack;
+  let urlTalesPack = '';
   
   JSDOM.fromURL(url).then( dom => {
-    randomStoriesPack = dom
+    urlTalesPack = dom
       .window
       .document
       .getElementById('mw-content-text')
       .getElementsByTagName('p');
       
-    for (let i = 0; i < randomStoriesPack.length; i++) 
-      dbStoryTran( {id: i, text: randomStoriesPack.item(i).innerHTML} );
+    for (let i = 0; i < urlTalesPack.length; i++) 
+      dbTalesTran( {id: i, text: urltalesPack.item(i).innerHTML} );
   });
-  dbStoryLength += randomStoriesPack.length;
+  dbTalesLength += urlTalesPack.length;
 });
 
 
