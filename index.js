@@ -59,33 +59,33 @@ bot.onText(/\/pnh/, msg => {
 bot.onText(/\/aaaa/, msg => {
   const r = getRandomInt( dbRecruitsLength );
   
+  recruitName = dbRecruits.get( {id: r} ).name.toUpperCase();
+  
   if (msg.date > callLimiterByDate + 43200) {
     
     callLimiterByDate = msg.date;
     
     dbRecruitsUpdateTran( {id: r} );
     
-    recruitName = dbRecruits.get( {id: r} ).name.toUpperCase();
-    
-    bot.sendMessage( msg.chat.id, `<i>— @${recruitName}, ВЫ ТЕРЬ РЯДОВОЙ! НА ПЛАЦ БЕГОМ МАРШ!!!!!!!</i>`, {parse_mode: 'HTML'} );
+    bot.sendMessage( msg.chat.id, `<i>— @${recruitName}, ВЫ ТЕРЬ РЯДОВОЙ! ПО МАШИНАМ!!! БЕГОМ МА-А-АРШ!!!!</i>`, {parse_mode: 'HTML'} );
   } else {
-    bot.sendMessage( msg.chat.id, `<i>— НА СЕГОДНЯ ПРИЗЫВ ОКОНЧЕН!</i>`, {parse_mode: 'HTML'} )
+    bot.sendMessage( msg.chat.id, `<i>— В УАЗИК ПОМЕЩАЕТСЯ ТОЛЬКО ОДИН ПРИЗЫВНИК! ЗА ОСТАЛЬНЫМИ ПОЗЖЕ ЗАЕДУ!</i>`, {parse_mode: 'HTML'} )
   }
 });
 
 
 bot.onText(/\/otchislen/, msg => { 
+  recruitName = msg.from.username.toUpperCase()
+  
   if (dbRecruitsFindClone.get( {name: msg.from.username} ) === undefined) {
     
     dbRecruitsWriteTran( {id: dbRecruitsLength , name: msg.from.username, count: 0} );
     
     dbRecruitsLength++;
     
-    recruitName = msg.from.username.toUpperCase();
-    
-    bot.sendMessage( msg.chat.id, `<i>— ВАС ЗАМЕТИЛИ, @${recruitName}!</i>` , {parse_mode: 'HTML'} );
+    bot.sendMessage( msg.chat.id, `<i>— ОЖИДАЙТЕ ПОВЕСТОЧКИ, @${recruitName}!</i>` , {parse_mode: 'HTML'} );
   } else {
-    bot.sendMessage( msg.chat.id, `<i>— ВТОРОЙ РАЗ НЕ ПРИЗЫВАЮТ, И-ДИ-ОТ!</i>`, {parse_mode: 'HTML'} );
+    bot.sendMessage( msg.chat.id, `<i>— @${recruitName}, К МОЕМУ СЧАСТЬЮ, ТОВАРИЩ МЛАДШИЙ РЯДОВОЙ, ОТЧИСЛИТЬСЯ ИЗ ВОЙСК — НЕ-ВО-ЗМО-ЖНО!!!</i>`, {parse_mode: 'HTML'} );
   }
 });
 
