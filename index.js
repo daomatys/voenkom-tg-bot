@@ -7,15 +7,19 @@ const bot = new tgBot( process.env.BOEHKOM_TOKEN, {polling: true} );
 const db = new database( 'database.db', {verbose: console.log} );
 
 const dbRecruits = db.prepare('SELECT name, count FROM recruits WHERE id = :id');
-const dbRecruitsUpdate = db.prepare('UPDATE recruits SET count = count + 1 WHERE id = :id');
-const dbRecruitsUpdateTran = db.transaction(item => dbRecruitsUpdate.run(item));
-const dbRecruitsWrite = db.prepare('INSERT INTO recruits (id, name, count) VALUES (:id, :name, :count)');
-const dbRecruitsWriteTran = db.transaction(item => dbRecruitsWrite.run(item));
-const dbRecruitsFindClone = db.prepare('SELECT id FROM recruits WHERE name = :name');
+const dbRecruitsUpdate = db.transaction(item => db
+  .prepare('UPDATE recruits SET count = count + 1 WHERE id = :id')
+  .run(item));
 
-const dbTales = db.prepare('INSERT INTO tales (id, text) VALUES (:id, :text)');
-const dbTalesTran = db.transaction(item => dbTales.run(item));
-const dbTalesRead = db.prepare('SELECT text FROM tales WHERE id = :id');
+const dbRecruitsFindClone = db.prepare('SELECT id FROM recruits WHERE name = :name');
+const dbRecruitsWrite = db.transaction(item => db
+  .prepare('INSERT INTO recruits (id, name, count) VALUES (:id, :name, :count)')
+  .run(item));
+
+const dbTales = db.prepare('SELECT text FROM tales WHERE id = :id');
+const dbTalesImport = db.transaction( item => db
+  .prepare('INSERT INTO tales (id, text) VALUES (:id, :text)')
+  .run(item));
 
 const getRandomInt = max => Math.floor( Math.random() * Math.floor(max) ); //[0, max)
 const getRandomAnswer = (k, r) => db
@@ -61,7 +65,7 @@ bot.onText(/\/aaaa/, msg => {
     const privateName = dbRecruits.get( {id: r} ).name.toUpperCase();
     
     callLimiterByDate = msg.date;
-    dbRecruitsUpdateTran( {id: r} );
+    dbRecruitsUpdate( {id: r} );
     
     bot.sendMessage( msg.chat.id, `<i>— @${privateName}, ВЫ ТЕРЬ РЯДОВОЙ! ПО МАШИНАМ!!! БЕГО-О-ОМ МА-А-А-АРШ!!!!</i>`, {parse_mode: 'HTML'} );
   } else {
@@ -76,7 +80,7 @@ bot.onText(/\/otchislen/, msg => {
   
   if (dbRecruitsFindClone.get( {name: recruitNameOps} ) === undefined) {
     
-    dbRecruitsWriteTran( {id: dbRecruitsLength , name: recruitNameOps, count: 0} );
+    dbRecruitsWrite( {id: dbRecruitsLength , name: recruitNameOps, count: 0} );
     dbRecruitsLength++;
     
     bot.sendMessage( msg.chat.id, `<i>— ОЖИДАЙТЕ ПОВЕСТОЧКИ, @${recruitName}!</i>` , {parse_mode: 'HTML'} );
@@ -100,7 +104,7 @@ bot.onText(/\/spisok/, msg => {
 
 
 bot.onText(/\/coolstory/, msg => {
-  const randomStory = dbTalesRead.get( {id: getRandomInt(dbTalesLength)} ).text;
+  const randomStory = dbTales.get( {id: getRandomInt(dbTalesLength)} ).text;
   bot.sendMessage( msg.chat.id, '<i>— ' + randomStory + '</i>', {parse_mode: 'HTML'} );
 });
 
@@ -117,7 +121,7 @@ bot.onText(/\/import/, msg => {
       .getElementsByTagName('p');
       
     for (let i = 0; i < urlTalesPack.length; i++) {
-      dbTalesTran( {id: i, text: urltalesPack.item(i).innerHTML} );
+      dbTalesImport( {id: i, text: urltalesPack.item(i).innerHTML} );
     }
   });
   
