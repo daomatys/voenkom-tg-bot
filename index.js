@@ -3,8 +3,8 @@ const dotenv = require('dotenv').config();
 const database = require('better-sqlite3');
 const { JSDOM } = require('jsdom');
 
-const bot = new tgBot(process.env.BOEHKOM_TOKEN, {polling: true});
-const db = new database('database.db', {verbose: console.log});
+const bot = new tgBot( process.env.BOEHKOM_TOKEN, {polling: true} );
+const db = new database( 'database.db', {verbose: console.log} );
 
 const dbList = db.prepare('SELECT name, count FROM otchisList WHERE id = :id');
 const dbListUpdate = db.prepare('UPDATE otchisList SET count = count + 1 WHERE id = :id');
@@ -19,8 +19,8 @@ const dbStoryRead = db.prepare('SELECT text FROM coolStorage WHERE id = :id');
 const dbAntiClone = db.prepare('SELECT id FROM otchisList WHERE name = :name');
 const dbAnswers = k => db.prepare('SELECT answer FROM answers' + k + ' WHERE id = :id');
 
-const getRandomInt = max => Math.floor(Math.random() * Math.floor(max)); //[0, max)
-const getRandomAnswer = (k, r) => dbAnswers(k).get({id: getRandomInt(r)}).answer;
+const getRandomInt = max => Math.floor( Math.random() * Math.floor(max) ); //[0, max)
+const getRandomAnswer = (k, r) => dbAnswers(k).get( {id: getRandomInt(r)} ).answer;
 
 const setCountWord = a => (Math.floor(a / 10) == 1) || (a % 10 < 2) || (a % 10 > 4) ? `раз` : `раза` ;
 
@@ -33,8 +33,9 @@ let recruitName;
 
 
 bot.onText(/^[^/]/, msg => {
-  if (heComes) 
+  if (heComes) {
     bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer('Regular', 28) + '!</i>', {parse_mode: 'HTML'} );
+  }
   if (getRandomInt(20) == 1) {
     bot.sendMessage( msg.chat.id, '<b>*' + getRandomAnswer('Spawn', 14) + '*</b>', {parse_mode: 'HTML'} );
     heComes = true;
@@ -43,21 +44,23 @@ bot.onText(/^[^/]/, msg => {
 
 
 bot.onText(/\/pnh/, msg => {
-  if (heComes) 
+  if (heComes) {
     bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer('Quit', 11) + '!</i>', {parse_mode: 'HTML'} );
+  }
   heComes = false;
 });
 
 
 bot.onText(/\/aaaa/, msg => {
-  const r = getRandomInt(dbListLength);
+  const r = getRandomInt( dbListLength );
+  
   if (msg.date > callLimiterByDate + 43200) {
     
     callLimiterByDate = msg.date;
     
-    dbListUpdateTran({id: r});
+    dbListUpdateTran( {id: r} );
     
-    recruitName = dbList.get({id: r}).name.toUpperCase();
+    recruitName = dbList.get( {id: r} ).name.toUpperCase();
     
     bot.sendMessage( msg.chat.id, `<i>— @${recruitName}, ВЫ ТЕРЬ РЯДОВОЙ! НА ПЛАЦ БЕГОМ МАРШ!!!!!!!</i>`, {parse_mode: 'HTML'} );
   } else {
@@ -67,7 +70,7 @@ bot.onText(/\/aaaa/, msg => {
 
 
 bot.onText(/\/otchislen/, msg => { 
-  if (dbAntiClone.get({name: msg.from.username}) === undefined) {
+  if (dbAntiClone.get( {name: msg.from.username} ) === undefined) {
     
     dbListWriteTran( {id: dbListLength , name: msg.from.username, count: 0} );
     
@@ -75,7 +78,7 @@ bot.onText(/\/otchislen/, msg => {
     
     recruitName = msg.from.username.toUpperCase();
     
-    bot.sendMessage( msg.chat.id, `<i>— МВА-ХА-ХА-ХА-ХА. ДОБРО ПОЖАЛОВАТЬ В АД, @${recruitName}!</i>` , {parse_mode: 'HTML'} );
+    bot.sendMessage( msg.chat.id, `<i>— ВАС ЗАМЕТИЛИ, @${recruitName}!</i>` , {parse_mode: 'HTML'} );
   } else {
     bot.sendMessage( msg.chat.id, `<i>— ВТОРОЙ РАЗ НЕ ПРИЗЫВАЮТ, И-ДИ-ОТ!</i>`, {parse_mode: 'HTML'} );
   }
@@ -87,7 +90,7 @@ bot.onText(/\/spisok/, msg => {
   let otchisListBody = '';
   
   for (let i = 0; i < dbListLength; i++) {
-    let item = dbList.get({id: i});
+    let item = dbList.get( {id: i} );
     otchisListBody += `• ${item.name} — ${item.count} ${setCountWord(item.count)}!\n`;
   }
   bot.sendMessage( msg.chat.id, '<code>' + otchisListTitle + otchisListBody + '</code>', {parse_mode: 'HTML'} );
@@ -95,7 +98,7 @@ bot.onText(/\/spisok/, msg => {
 
 
 bot.onText(/\/coolstory/, msg => {
-  const randomStory = dbStoryRead.get({id: getRandomInt(dbStoryLength)}).text;
+  const randomStory = dbStoryRead.get( {id: getRandomInt(dbStoryLength)} ).text;
   bot.sendMessage( msg.chat.id, '<i>— ' + randomStory + '</i>', {parse_mode: 'HTML'} );
 });
 
@@ -110,8 +113,9 @@ bot.onText(/\/import/, msg => {
       .document
       .getElementById('mw-content-text')
       .getElementsByTagName('p');
+      
     for (let i = 0; i < randomStoriesPack.length; i++) 
-      dbStoryTran({id: i, text: randomStoriesPack.item(i).innerHTML});
+      dbStoryTran( {id: i, text: randomStoriesPack.item(i).innerHTML} );
   });
   dbStoryLength += randomStoriesPack.length;
 });
