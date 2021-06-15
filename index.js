@@ -7,31 +7,19 @@ const bot = new tgBot( process.env.BOEHKOM_TOKEN, {polling: true} );
 const db = new database( 'database.db', {verbose: console.log} );
 
 const dbRecruits = db.prepare('SELECT name, count FROM recruits WHERE id = :id');
-const dbRecruitsUpdate = db.transaction( item => db
-  .prepare('UPDATE recruits SET count = count + 1 WHERE id = :id')
-  .run(item));
-
+const dbRecruitsWrite = db.transaction( item => db.prepare('INSERT INTO recruits (name, count) VALUES (:name, :count)').run(item));
+const dbRecruitsUpdate = db.transaction( item => db.prepare('UPDATE recruits SET count = count + 1 WHERE id = :id').run(item));
 const dbRecruitsFindClone = db.prepare('SELECT id FROM recruits WHERE name = :name');
-const dbRecruitsWrite = db.transaction( item => db
-  .prepare('INSERT INTO recruits (name, count) VALUES (:name, :count)')
-  .run(item));
 
-const dbTales = db.prepare('SELECT text FROM tales WHERE id = :id');
-const dbTalesImport = db.transaction( item => db
-  .prepare('INSERT INTO tales (text) VALUES (:text)')
-  .run(item));
+const dbTalesImport = db.transaction( item => db.prepare('INSERT INTO tales (text) VALUES (:text)').run(item));
 
 const getRandomInt = max => Math.floor( Math.random() * Math.floor(max) ); //[0, max)
-const getRandomAnswer = k => db
-  .prepare('SELECT answer FROM ' + k + ' WHERE id = :id')
-  .get( {id: getRandomInt( dbAnyTableLength(k) )} )
-  .answer;
 
-const setCountWord = a => (Math.floor(a / 10) == 1) || (a % 10 < 2) || (a % 10 > 4) ? `раз` : `раза` ;
-const dbAnyTableLength = k => db
-  .prepare('SELECT * FROM ' + k + ' ORDER BY id DESC LIMIT 1;')
-  .get()
-  .id + 1;
+const dbAnyTableLength = k => db.prepare('SELECT * FROM ' + k + ' ORDER BY id DESC LIMIT 1;').get().id + 1;
+const dbAnyText = k => db
+  .prepare('SELECT text FROM ' + k + ' WHERE id = :id')
+  .get( {id: getRandomInt( dbAnyTableLength(k) )} )
+  .text;
 
 let dbRecruitsLength = dbAnyTableLength('recruits');
 let dbTalesLength = dbAnyTableLength('tales');
@@ -42,11 +30,11 @@ let heComes = false;
 
 bot.onText(/^[^/]/, msg => {
   if (heComes) {
-    bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer('answersRegular') + '!</i>', {parse_mode: 'HTML'} );
+    bot.sendMessage( msg.chat.id, '<i>— ' + dbAnyText('answersRegular') + '!</i>', {parse_mode: 'HTML'} );
   }
   if (getRandomInt(20) == 1) {
     heComes = true;
-    bot.sendMessage( msg.chat.id, '<b>*' + getRandomAnswer('answersSpawn') + '*</b>', {parse_mode: 'HTML'} );
+    bot.sendMessage( msg.chat.id, '<b>*' + dbAnyText('answersSpawn') + '*</b>', {parse_mode: 'HTML'} );
   }
 });
 
@@ -54,7 +42,7 @@ bot.onText(/^[^/]/, msg => {
 bot.onText(/\/pnh/, msg => {
   if (heComes) {
     heComes = false;
-    bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer('answersQuit') + '!</i>', {parse_mode: 'HTML'} );
+    bot.sendMessage( msg.chat.id, '<i>— ' + dbAnyText('answersQuit') + '!</i>', {parse_mode: 'HTML'} );
   }
 });
 
@@ -90,6 +78,7 @@ bot.onText(/\/otchislen/, msg => {
 
 
 bot.onText(/\/spisok/, msg => {
+  const setCountWord = a => (Math.floor(a / 10) == 1) || (a % 10 < 2) || (a % 10 > 4) ? `раз` : `раза` ;
   const dbRecruitsTitle = `ЛИЧНЫЙ СОСТАВ В/Ч 1337\nЗАЩИТИЛ САПОГИ:\n\n`;
   let dbRecruitsList = '';
   
@@ -103,7 +92,7 @@ bot.onText(/\/spisok/, msg => {
 
 
 bot.onText(/\/coolstory/, msg => {
-  const randomStory = dbTales.get( {id: getRandomInt(dbTalesLength)} ).text;
+  const randomStory = dbAnyText('tales');
   bot.sendMessage( msg.chat.id, '<i>— ' + randomStory + '</i>', {parse_mode: 'HTML'} );
 });
 
