@@ -7,24 +7,24 @@ const bot = new tgBot( process.env.BOEHKOM_TOKEN, {polling: true} );
 const db = new database( 'database.db', {verbose: console.log} );
 
 const dbRecruits = db.prepare('SELECT name, count FROM recruits WHERE id = :id');
-const dbRecruitsUpdate = db.transaction(item => db
+const dbRecruitsUpdate = db.transaction( item => db
   .prepare('UPDATE recruits SET count = count + 1 WHERE id = :id')
   .run(item));
 
 const dbRecruitsFindClone = db.prepare('SELECT id FROM recruits WHERE name = :name');
-const dbRecruitsWrite = db.transaction(item => db
-  .prepare('INSERT INTO recruits (id, name, count) VALUES (:id, :name, :count)')
+const dbRecruitsWrite = db.transaction( item => db
+  .prepare('INSERT INTO recruits (name, count) VALUES (:name, :count)')
   .run(item));
 
 const dbTales = db.prepare('SELECT text FROM tales WHERE id = :id');
 const dbTalesImport = db.transaction( item => db
-  .prepare('INSERT INTO tales (id, text) VALUES (:id, :text)')
+  .prepare('INSERT INTO tales (text) VALUES (:text)')
   .run(item));
 
 const getRandomInt = max => Math.floor( Math.random() * Math.floor(max) ); //[0, max)
-const getRandomAnswer = (k, r) => db
-  .prepare('SELECT answer FROM answers' + k + ' WHERE id = :id')
-  .get( {id: getRandomInt(r)} )
+const getRandomAnswer = k => db
+  .prepare('SELECT answer FROM ' + k + ' WHERE id = :id')
+  .get( {id: getRandomInt( dbAnyTableLength(k) )} )
   .answer;
 
 const setCountWord = a => (Math.floor(a / 10) == 1) || (a % 10 < 2) || (a % 10 > 4) ? `раз` : `раза` ;
@@ -42,11 +42,11 @@ let heComes = false;
 
 bot.onText(/^[^/]/, msg => {
   if (heComes) {
-    bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer('Regular', 28) + '!</i>', {parse_mode: 'HTML'} );
+    bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer('answersRegular') + '!</i>', {parse_mode: 'HTML'} );
   }
   if (getRandomInt(20) == 1) {
     heComes = true;
-    bot.sendMessage( msg.chat.id, '<b>*' + getRandomAnswer('Spawn', 14) + '*</b>', {parse_mode: 'HTML'} );
+    bot.sendMessage( msg.chat.id, '<b>*' + getRandomAnswer('answersSpawn') + '*</b>', {parse_mode: 'HTML'} );
   }
 });
 
@@ -54,7 +54,7 @@ bot.onText(/^[^/]/, msg => {
 bot.onText(/\/pnh/, msg => {
   if (heComes) {
     heComes = false;
-    bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer('Quit', 11) + '!</i>', {parse_mode: 'HTML'} );
+    bot.sendMessage( msg.chat.id, '<i>— ' + getRandomAnswer('answersQuit') + '!</i>', {parse_mode: 'HTML'} );
   }
 });
 
@@ -80,12 +80,11 @@ bot.onText(/\/otchislen/, msg => {
   
   if (dbRecruitsFindClone.get( {name: recruitNameOps} ) === undefined) {
     
-    dbRecruitsWrite( {id: dbRecruitsLength , name: recruitNameOps, count: 0} );
-    dbRecruitsLength++;
+    dbRecruitsWrite( {name: recruitNameOps, count: 0} );
     
     bot.sendMessage( msg.chat.id, `<i>— ОЖИДАЙТЕ ПОВЕСТОЧКИ, @${recruitName}!</i>` , {parse_mode: 'HTML'} );
   } else {
-    bot.sendMessage( msg.chat.id, `<i>— @${recruitName}, К МОЕМУ СЧАСТЬЮ, ТОВАРИЩ МЛАДШИЙ РЯДОВОЙ, ОТЧИСЛИТЬСЯ ИЗ ВОЙСК — НЕ-ВО-ЗМО-ЖНО!!!</i>`, {parse_mode: 'HTML'} );
+    bot.sendMessage( msg.chat.id, `<i>— @${recruitName}, К МОЕМУ СЧАСТЬЮ, ТОВАРИЩ МЛАДШИЙ РЯДОВОЙ, ОТЧИСЛИТЬСЯ ИЗ ВОЙСК — НЕ-ВО-ЗМО-ЖНО!!! </i>`, {parse_mode: 'HTML'} );
   }
 });
 
@@ -121,7 +120,7 @@ bot.onText(/\/import/, msg => {
       .getElementsByTagName('p');
       
     for (let i = 0; i < urlTalesPack.length; i++) {
-      dbTalesImport( {id: i, text: urltalesPack.item(i).innerHTML} );
+      dbTalesImport( {text: urltalesPack.item(i).innerHTML} );
     }
   });
   
