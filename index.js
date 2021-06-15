@@ -92,8 +92,7 @@ bot.onText(/\/spisok/, msg => {
 
 
 bot.onText(/\/coolstory/, msg => {
-  const randomStory = dbAnyText('tales');
-  bot.sendMessage( msg.chat.id, '<i>— ' + randomStory + '</i>', {parse_mode: 'HTML'} );
+  bot.sendMessage( msg.chat.id, '<i>— ' + dbAnyText('tales') + '</i>', {parse_mode: 'HTML'} );
 });
 
 
