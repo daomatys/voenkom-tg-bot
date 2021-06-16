@@ -6,23 +6,21 @@ const { JSDOM } = require('jsdom');
 const bot = new tgBot( process.env.BOEHKOM_TOKEN, {polling: true} );
 const db = new database( 'database.db', {verbose: console.log} );
 
-const dbRecruits = db.prepare('SELECT name, count FROM recruits WHERE id = :id');
-const dbRecruitsWrite = db.transaction( item => db.prepare('INSERT INTO recruits (name, count) VALUES (:name, :count)').run(item));
-const dbRecruitsUpdate = db.transaction( item => db.prepare('UPDATE recruits SET count = count + 1 WHERE id = :id').run(item));
+const dbRecruits = db.prepare('SELECT name, count FROM recruits');
+const dbRecruitsById = db.prepare('SELECT name, count FROM recruits WHERE id = :id'); 
+const dbRecruitsWrite = db.transaction( item => db.prepare('INSERT INTO recruits (name, count) VALUES (:name, :count)').run(item) );
+const dbRecruitsUpdate = db.transaction( item => db.prepare('UPDATE recruits SET count = count + 1 WHERE id = :id').run(item) );
 const dbRecruitsFindClone = db.prepare('SELECT id FROM recruits WHERE name = :name');
 
-const dbTalesImport = db.transaction( item => db.prepare('INSERT INTO tales (text) VALUES (:text)').run(item));
+const dbTalesImport = db.transaction( item => db.prepare('INSERT INTO tales (text) VALUES (:text)').run(item) );
 
-const getRandomInt = max => Math.floor( Math.random() * Math.floor(max) ); //[0, max)
+const getRandomInt = max => 1 + Math.floor( Math.random() * Math.floor(max) ); //[1, max]
 
-const dbAnyTableLength = k => db.prepare('SELECT * FROM ' + k + ' ORDER BY id DESC LIMIT 1;').get().id + 1;
+const dbAnyTableLength = n => db.prepare(`SELECT seq FROM sqlite_sequence WHERE name = :name`).get({name: n}).seq;
 const dbAnyText = k => db
   .prepare('SELECT text FROM ' + k + ' WHERE id = :id')
   .get( {id: getRandomInt( dbAnyTableLength(k) )} )
   .text;
-
-let dbRecruitsLength = dbAnyTableLength('recruits');
-let dbTalesLength = dbAnyTableLength('tales');
 
 let callLimiterByDate = 0;
 let heComes = false;
@@ -64,11 +62,14 @@ bot.onText(/\/otchislen/, msg => {
 
 bot.onText(/\/aaaa/, msg => {
   if (msg.date > callLimiterByDate + 3600) {
-    const r = getRandomInt( dbRecruitsLength );
-    const privateName = dbRecruits.get( {id: r} ).name.toUpperCase();
+    const r = getRandomInt( dbAnyTableLength('recruits') );
+    const privateName = dbRecruitsById
+      .get({id: r})
+      .name
+      .toUpperCase();
     
     callLimiterByDate = msg.date;
-    dbRecruitsUpdate( {id: r} );
+    dbRecruitsUpdate({id: r});
     
     bot.sendMessage( msg.chat.id, `<i>— @${privateName}, ${dbAnyText('privateJoin')}</i>`, {parse_mode: 'HTML'} );
   } else {
@@ -79,20 +80,18 @@ bot.onText(/\/aaaa/, msg => {
 
 bot.onText(/\/spisok/, msg => {
   const setCountWord = a => (Math.floor(a / 10) == 1) || (a % 10 < 2) || (a % 10 > 4) ? `раз` : `раза` ;
-  const dbRecruitsTitle = `ЛИЧНЫЙ СОСТАВ В/Ч 1337\nЗАЩИТИЛ САПОГИ:\n\n`;
-  let dbRecruitsList = '';
+  const recruitsTitle = `ЛИЧНЫЙ СОСТАВ В/Ч 1337\nЗАЩИТИЛ САПОГИ:\n\n`;
+  const recruitsBody = dbRecruits
+    .all()
+    .map(item => `• ${item.name} — ${item.count} ${setCountWord(item.count)}!`)
+    .join('\n');
   
-  for (let i = 0; i < dbRecruitsLength; i++) {
-    let item = dbRecruits.get( {id: i} );
-    dbRecruitsList += `• ${item.name} — ${item.count} ${setCountWord(item.count)}!\n`;
-  }
-  
-  bot.sendMessage( msg.chat.id, '<code>' + dbRecruitsTitle + dbRecruitsList + '</code>', {parse_mode: 'HTML'} );
+  bot.sendMessage( msg.chat.id, '<code>' + recruitsTitle + recruitsBody + '</code>', {parse_mode: 'HTML'} );
 });
 
 
 bot.onText(/\/coolstory/, msg => {
-  bot.sendMessage( msg.chat.id, '<i>— ' + dbAnyText('tales') + '</i>', {parse_mode: 'HTML'} );
+  bot.sendMessage( msg.chat.id, `<i>— ${dbAnyText('tales')} </i>`, {parse_mode: 'HTML'} );
 });
 
 
@@ -107,9 +106,10 @@ bot.onText(/\/import/, msg => {
       .getElementById('mw-content-text')
       .getElementsByTagName('p');
       
-    for (let i = 0; i < urlTalesPack.length; i++) {
+    for (let i = 1; i <= urlTalesPack.length; i++) {
       dbTalesImport( {text: urltalesPack.item(i).innerHTML} );
     }
+    bot.sendMessage( msg.chat.id, 'Done' );
   });
   
   dbTalesLength += urlTalesPack.length;
