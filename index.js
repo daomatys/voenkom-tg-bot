@@ -2,9 +2,11 @@ const tgBot = require('node-telegram-bot-api');
 const dotenv = require('dotenv').config();
 const database = require('better-sqlite3');
 const { JSDOM } = require('jsdom');
+const MersenneTwister = require('mersenne-twister');
 
 const bot = new tgBot( process.env.BOEHKOM_TOKEN, {polling: true} );
 const db = new database( 'database.db', {verbose: console.log} );
+const blessRNG = new MersenneTwister();
 
 const dbRecruits = db.prepare('SELECT name, count FROM recruits');
 const dbRecruitsById = db.prepare('SELECT name, count FROM recruits WHERE id = :id'); 
@@ -14,7 +16,7 @@ const dbRecruitsFindClone = db.prepare('SELECT id FROM recruits WHERE name = :na
 
 const dbTalesImport = db.transaction( item => db.prepare('INSERT INTO tales (text) VALUES (:text)').run(item) );
 
-const getRandomInt = max => 1 + Math.floor( Math.random() * Math.floor(max) ); //[1, max]
+const getRandomInt = max => 1 + Math.floor( blessRNG.random() * Math.floor(max) ); //[1, max]
 
 const dbAnyTableLength = n => db.prepare(`SELECT seq FROM sqlite_sequence WHERE name = :name`).get({name: n}).seq;
 const dbAnyText = k => db
@@ -22,15 +24,17 @@ const dbAnyText = k => db
   .get( {id: getRandomInt( dbAnyTableLength(k) )} )
   .text;
 
-let callLimiterByDate = 0;
+let callByDate = 0;
+let callInterval = 3600; //unixtime, seconds
 let heComes = false;
+let heComesChance = 20; //%
 
 
 bot.onText(/^[^/]/, msg => {
   if (heComes) {
     bot.sendMessage( msg.chat.id, `<i>— ${dbAnyText('answersRegular')}!</i>`, {parse_mode: 'HTML'} );
   }
-  if (getRandomInt(20) == 1) {
+  if (getRandomInt(100) <= heComesChance) {
     heComes = true;
     bot.sendMessage( msg.chat.id, `<b>*${dbAnyText('answersSpawn')}*</b>`, {parse_mode: 'HTML'} );
   }
@@ -50,9 +54,7 @@ bot.onText(/\/otchislen/, msg => {
   const recruitName = recruitNameOps.toUpperCase();
   
   if (dbRecruitsFindClone.get( {name: recruitNameOps} ) === undefined) {
-    
     dbRecruitsWrite( {name: recruitNameOps, count: 0} );
-    
     bot.sendMessage( msg.chat.id, `<i>— ${dbAnyText('recruitMarked')}, @${recruitName}!</i>` , {parse_mode: 'HTML'} );
   } else {
     bot.sendMessage( msg.chat.id, `<i>— @${recruitName}, ${dbAnyText('recruitOnDuty')}</i>`, {parse_mode: 'HTML'} );
@@ -61,7 +63,7 @@ bot.onText(/\/otchislen/, msg => {
 
 
 bot.onText(/\/aaaa/, msg => {
-  if (msg.date > callLimiterByDate + 3600) {
+  if (msg.date > callByDate + callInrerval) {
     const r = getRandomInt( dbAnyTableLength('recruits') );
     const privateName = dbRecruitsById
       .get({id: r})
@@ -70,7 +72,6 @@ bot.onText(/\/aaaa/, msg => {
     
     callLimiterByDate = msg.date;
     dbRecruitsUpdate({id: r});
-    
     bot.sendMessage( msg.chat.id, `<i>— @${privateName}, ${dbAnyText('privateJoin')}</i>`, {parse_mode: 'HTML'} );
   } else {
     bot.sendMessage( msg.chat.id, `<i>— ${dbAnyText('privateWait')}</i>`, {parse_mode: 'HTML'} )
