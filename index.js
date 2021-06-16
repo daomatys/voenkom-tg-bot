@@ -30,11 +30,11 @@ let heComes = false;
 
 bot.onText(/^[^/]/, msg => {
   if (heComes) {
-    bot.sendMessage( msg.chat.id, '<i>— ' + dbAnyText('answersRegular') + '!</i>', {parse_mode: 'HTML'} );
+    bot.sendMessage( msg.chat.id, `<i>— ${dbAnyText('answersRegular')}!</i>`, {parse_mode: 'HTML'} );
   }
   if (getRandomInt(20) == 1) {
     heComes = true;
-    bot.sendMessage( msg.chat.id, '<b>*' + dbAnyText('answersSpawn') + '*</b>', {parse_mode: 'HTML'} );
+    bot.sendMessage( msg.chat.id, `<b>*${dbAnyText('answersSpawn')}*</b>`, {parse_mode: 'HTML'} );
   }
 });
 
@@ -42,22 +42,7 @@ bot.onText(/^[^/]/, msg => {
 bot.onText(/\/pnh/, msg => {
   if (heComes) {
     heComes = false;
-    bot.sendMessage( msg.chat.id, '<i>— ' + dbAnyText('answersQuit') + '!</i>', {parse_mode: 'HTML'} );
-  }
-});
-
-
-bot.onText(/\/aaaa/, msg => {
-  if (msg.date > callLimiterByDate + 3600) {
-    const r = getRandomInt( dbRecruitsLength );
-    const privateName = dbRecruits.get( {id: r} ).name.toUpperCase();
-    
-    callLimiterByDate = msg.date;
-    dbRecruitsUpdate( {id: r} );
-    
-    bot.sendMessage( msg.chat.id, `<i>— @${privateName}, ВЫ ТЕРЬ РЯДОВОЙ! ПО МАШИНАМ!!! БЕГО-О-ОМ МА-А-А-АРШ!!!!</i>`, {parse_mode: 'HTML'} );
-  } else {
-    bot.sendMessage( msg.chat.id, `<i>— В УАЗИК ПОМЕЩАЕТСЯ ТОЛЬКО ОДИН ПРИЗЫВНИК! ЗА ОСТАЛЬНЫМИ ЧЕРЕЗ ЧАС ВЕРНУСЬ, ХЕ-ХЕ!</i>`, {parse_mode: 'HTML'} )
+    bot.sendMessage( msg.chat.id, `<i>— ${dbAnyText('answersQuit')}!</i>`, {parse_mode: 'HTML'} );
   }
 });
 
@@ -70,9 +55,24 @@ bot.onText(/\/otchislen/, msg => {
     
     dbRecruitsWrite( {name: recruitNameOps, count: 0} );
     
-    bot.sendMessage( msg.chat.id, `<i>— ОЖИДАЙТЕ ПОВЕСТОЧКИ, @${recruitName}!</i>` , {parse_mode: 'HTML'} );
+    bot.sendMessage( msg.chat.id, `<i>— ${dbAnyText('recruitMarked')}, @${recruitName}!</i>` , {parse_mode: 'HTML'} );
   } else {
-    bot.sendMessage( msg.chat.id, `<i>— @${recruitName}, К МОЕМУ СЧАСТЬЮ, ТОВАРИЩ МЛАДШИЙ РЯДОВОЙ, ОТЧИСЛИТЬСЯ ИЗ ВОЙСК — НЕ-ВО-ЗМО-ЖНО!!! </i>`, {parse_mode: 'HTML'} );
+    bot.sendMessage( msg.chat.id, `<i>— @${recruitName}, ${dbAnyText('recruitOnDuty')}</i>`, {parse_mode: 'HTML'} );
+  }
+});
+
+
+bot.onText(/\/aaaa/, msg => {
+  if (msg.date > callLimiterByDate + 3600) {
+    const r = getRandomInt( dbRecruitsLength );
+    const privateName = dbRecruits.get( {id: r} ).name.toUpperCase();
+    
+    callLimiterByDate = msg.date;
+    dbRecruitsUpdate( {id: r} );
+    
+    bot.sendMessage( msg.chat.id, `<i>— @${privateName}, ${dbAnyText('privateJoin')}</i>`, {parse_mode: 'HTML'} );
+  } else {
+    bot.sendMessage( msg.chat.id, `<i>— ${dbAnyText('privateWait')}</i>`, {parse_mode: 'HTML'} )
   }
 });
 
