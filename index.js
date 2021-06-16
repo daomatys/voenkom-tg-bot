@@ -13,19 +13,22 @@ const dbRecruitsById = db.prepare('SELECT name, count FROM recruits WHERE id = :
 const dbRecruitsWrite = db.transaction( item => db.prepare('INSERT INTO recruits (name, count) VALUES (:name, :count)').run(item) );
 const dbRecruitsUpdate = db.transaction( item => db.prepare('UPDATE recruits SET count = count + 1 WHERE id = :id').run(item) );
 const dbRecruitsFindClone = db.prepare('SELECT id FROM recruits WHERE name = :name');
-
 const dbTalesImport = db.transaction( item => db.prepare('INSERT INTO tales (text) VALUES (:text)').run(item) );
 
 const getRandomInt = max => 1 + Math.floor( blessRNG.random() * Math.floor(max) ); //[1, max]
 
-const dbAnyTableLength = n => db.prepare(`SELECT seq FROM sqlite_sequence WHERE name = :name`).get({name: n}).seq;
+const dbAnyTableLength = n => db
+  .prepare(`SELECT seq FROM sqlite_sequence WHERE name = :name`)
+  .get({name: n})
+  .seq;
+
 const dbAnyText = k => db
   .prepare('SELECT text FROM ' + k + ' WHERE id = :id')
   .get( {id: getRandomInt( dbAnyTableLength(k) )} )
   .text;
 
 let callByDate = 0;
-let callInterval = 3600; //unixtime, seconds
+let callCooldown = 3600; //unixtime, seconds
 let heComes = false;
 let heComesChance = 20; //%
 
@@ -63,7 +66,7 @@ bot.onText(/\/otchislen/, msg => {
 
 
 bot.onText(/\/aaaa/, msg => {
-  if (msg.date > callByDate + callInrerval) {
+  if (msg.date > callByDate + callCooldown) {
     const r = getRandomInt( dbAnyTableLength('recruits') );
     const privateName = dbRecruitsById
       .get({id: r})
