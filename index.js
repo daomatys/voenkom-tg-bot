@@ -30,8 +30,7 @@ const dbAnyText = k => db
 let callByDate = 0;
 let callCooldown = 3600; //unixtime, seconds
 let heComes = false;
-let heComesChance = 20; //%
-
+let heComesChance = 2; //%
 
 bot.onText(/^[^/]/, msg => {
   if (heComes) {
@@ -43,14 +42,12 @@ bot.onText(/^[^/]/, msg => {
   }
 });
 
-
 bot.onText(/\/pnh/, msg => {
   if (heComes) {
     heComes = false;
     bot.sendMessage( msg.chat.id, `<i>— ${dbAnyText('answersQuit')}!</i>`, {parse_mode: 'HTML'} );
   }
 });
-
 
 bot.onText(/\/otchislen/, msg => { 
   const recruitNameOps = msg.from.username;
@@ -64,7 +61,6 @@ bot.onText(/\/otchislen/, msg => {
   }
 });
 
-
 bot.onText(/\/aaaa/, msg => {
   if (msg.date > callByDate + callCooldown) {
     const r = getRandomInt( dbAnyTableLength('recruits') );
@@ -73,14 +69,13 @@ bot.onText(/\/aaaa/, msg => {
       .name
       .toUpperCase();
     
-    callLimiterByDate = msg.date;
+    callByDate = msg.date;
     dbRecruitsUpdate({id: r});
     bot.sendMessage( msg.chat.id, `<i>— @${privateName}, ${dbAnyText('privateJoin')}</i>`, {parse_mode: 'HTML'} );
   } else {
     bot.sendMessage( msg.chat.id, `<i>— ${dbAnyText('privateWait')}</i>`, {parse_mode: 'HTML'} )
   }
 });
-
 
 bot.onText(/\/spisok/, msg => {
   const setCountWord = a => (Math.floor(a / 10) == 1) || (a % 10 < 2) || (a % 10 > 4) ? `раз` : `раза` ;
@@ -93,11 +88,9 @@ bot.onText(/\/spisok/, msg => {
   bot.sendMessage( msg.chat.id, '<code>' + recruitsTitle + recruitsBody + '</code>', {parse_mode: 'HTML'} );
 });
 
-
 bot.onText(/\/coolstory/, msg => {
   bot.sendMessage( msg.chat.id, `<i>— ${dbAnyText('tales')} </i>`, {parse_mode: 'HTML'} );
 });
-
 
 bot.onText(/\/import/, msg => {
   const url = '';
@@ -118,6 +111,5 @@ bot.onText(/\/import/, msg => {
   
   dbTalesLength += urlTalesPack.length;
 });
-
 
 bot.on('polling_error', console.log);
