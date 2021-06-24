@@ -43,14 +43,16 @@ const isChatNew = msg => db
     PRIMARY KEY("id" AUTOINCREMENT)
     );`)
   .run();
-  
+
 const heSpawnChance = 20; //deci-percents ( % / 10 )
 
 const callCooldown = 3600; //unixtime seconds
 
+
 bot.onText(/^\/coolstory/, msg => {
   bot.sendMessage( msg.chat.id, `<i>— ${dbAnyText('tales')}</i>`, {parse_mode: 'HTML'} );
 });
+
 
 bot.onText(/^[^/]/, msg => {
   const idTable = getChatId(msg);
@@ -70,6 +72,7 @@ bot.onText(/^[^/]/, msg => {
   }
 });
 
+
 bot.onText(/^\/pnh/, msg => {
   const idTable = getChatId(msg);
   
@@ -82,6 +85,7 @@ bot.onText(/^\/pnh/, msg => {
     bot.sendMessage( msg.chat.id, `<i>— ${dbAnyText('answersQuit')}!</i>`, {parse_mode: 'HTML'} );
   }
 });
+
 
 bot.onText(/^\/otchislen/, msg => {
   isChatNew(msg);
@@ -98,6 +102,7 @@ bot.onText(/^\/otchislen/, msg => {
     bot.sendMessage( msg.chat.id, `<i>— @${recruitName}, ${dbAnyText('recruitOnDuty')}</i>`, {parse_mode: 'HTML'} );
   }
 });
+
 
 bot.onText(/^\/aaaa/, msg => {
   isChatNew(msg);
@@ -126,6 +131,7 @@ bot.onText(/^\/aaaa/, msg => {
   }
 });
 
+
 bot.onText(/^\/spisok/, msg => {
   isChatNew(msg);
   
@@ -145,8 +151,8 @@ bot.onText(/^\/spisok/, msg => {
   bot.sendMessage( msg.chat.id, '<code>' + spisokTitle + spisokBody + '</code>', {parse_mode: 'HTML'} );
 });
 
-/*//don't touch if you've no idea what's that
 
+/*//don't touch if you've no idea what's that
   bot.onText(/^\/import/, msg => {
   const url = '';
   let urlTalesPack = '';
@@ -164,5 +170,6 @@ bot.onText(/^\/spisok/, msg => {
     bot.sendMessage( msg.chat.id, 'Done' );
   });
 });*/
+
 
 bot.on('polling_error', console.log);
