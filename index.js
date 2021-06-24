@@ -55,23 +55,17 @@ bot.onText(/^\/coolstory/, msg => {
 bot.onText(/^[^/]/, msg => {
   const idTable = getChatId(msg);
   
-  dbNarratorNewTabname()
-    .run({ tablename: idTable });
+  dbNarratorNewTabname().run({ tablename: idTable });
   
-  const heComes = 
-    dbNarrators()
+  const heComes = dbNarrators()
       .get({ tablename: idTable })
       .state;
   
   if ( heComes ) {
     bot.sendMessage( msg.chat.id, `<i>— ${dbAnyText('answersRegular')}!</i>`, {parse_mode: 'HTML'} );
   }
-  
   if ( !heComes && getRandomInt(1000) <= heSpawnChance ) {
-    
-    dbNarratorSwitchState()
-      .run({ tablename: idTable });
-      
+    dbNarratorSwitchState().run({ tablename: idTable });
     bot.sendMessage( msg.chat.id, `<b>*${dbAnyText('answersSpawn')}*</b>`, {parse_mode: 'HTML'} );
   }
 });
@@ -79,16 +73,12 @@ bot.onText(/^[^/]/, msg => {
 bot.onText(/^\/pnh/, msg => {
   const idTable = getChatId(msg);
   
-  dbNarratorNewTabname()
-    .run({ tablename: idTable });
+  dbNarratorNewTabname().run({ tablename: idTable });
   
   const heComes = dbNarrators().get({ tablename: idTable }).state;
   
   if ( heComes ) {
-    
-    dbNarratorSwitchState()
-      .run({ tablename: idTable });
-      
+    dbNarratorSwitchState().run({ tablename: idTable };
     bot.sendMessage( msg.chat.id, `<i>— ${dbAnyText('answersQuit')}!</i>`, {parse_mode: 'HTML'} );
   }
 });
@@ -101,10 +91,8 @@ bot.onText(/^\/otchislen/, msg => {
   const recruitClone = dbRecruitIsClone(msg).get({ name: recruitNameOps });
   
   if ( recruitClone === undefined) {
+    dbRecruitWrite(msg).run({ name: recruitNameOps });
     
-    dbRecruitWrite(msg)
-      .run({ name: recruitNameOps });
-      
     bot.sendMessage( msg.chat.id, `<i>— ${dbAnyText('recruitMarked')}, @${recruitName}!</i>` , {parse_mode: 'HTML'} );
   } else {
     bot.sendMessage( msg.chat.id, `<i>— @${recruitName}, ${dbAnyText('recruitOnDuty')}</i>`, {parse_mode: 'HTML'} );
@@ -116,27 +104,21 @@ bot.onText(/^\/aaaa/, msg => {
   
   const idTable = getChatId(msg);
   
-  dbNarratorNewTabname()
-    .run({ tablename: idTable });
+  dbNarratorNewTabname().run({ tablename: idTable });
   
-  const calledAt = 
-    dbNarrators()
+  const calledAt = dbNarrators()
       .get({ tablename: idTable })
       .lastcall;
   
   if ( msg.date > calledAt + callCooldown ) {
     const r = getRandomInt( dbAnyTableLength( idTable ) );
-    const privateName = 
-      dbRecruitById(msg)
+    const privateName = dbRecruitById(msg)
         .get({ id: r })
         .name
         .toUpperCase();
     
-    dbRecruitUpdate(msg)
-      .run({ id: r });
-    
-    dbNarratorSetCalltime(msg)
-      .run({ tablename: idTable });
+    dbRecruitUpdate(msg).run({ id: r });
+    dbNarratorSetCalltime(msg).run({ tablename: idTable });
     
     bot.sendMessage( msg.chat.id, `<i>— @${privateName}, ${dbAnyText('privateJoin')}</i>`, {parse_mode: 'HTML'} );
   } else {
