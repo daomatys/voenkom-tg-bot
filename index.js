@@ -31,7 +31,7 @@ const dbAnyTableLength = table => db
 
 const dbAnyText = table => db
   .prepare(`SELECT text FROM ${table} WHERE id = :id`)
-  .get( {id: getRandomInt( dbAnyTableLength(table) )} )
+  .get({ id: getRandomInt( dbAnyTableLength(table) ) })
   .text;
   
 const isChatNew = msg => db
@@ -78,7 +78,7 @@ bot.onText(/^\/pnh/, msg => {
   const heComes = dbNarrators().get({ tablename: idTable }).state;
   
   if ( heComes ) {
-    dbNarratorSwitchState().run({ tablename: idTable };
+    dbNarratorSwitchState().run({ tablename: idTable });
     bot.sendMessage( msg.chat.id, `<i>— ${dbAnyText('answersQuit')}!</i>`, {parse_mode: 'HTML'} );
   }
 });
@@ -130,11 +130,11 @@ bot.onText(/^\/spisok/, msg => {
   isChatNew(msg);
   
   const setCountWord = a => 
-    Math.floor(a / 10) == 1 || 
-    a % 10 < 2 || 
-    a % 10 > 4 
-      ? `раз` 
-      : `раза` ;
+    ( Math.floor(a / 10) == 1 ) ||
+    ( a % 10 < 2 ) ||
+    ( a % 10 > 4 )
+      ? 'раз'
+      : 'раза' ;
       
   const spisokTitle = `ЛИЧНЫЙ СОСТАВ В/Ч 1337\nЗАЩИТИЛ САПОГИ:\n\n`;
   const spisokBody = dbRecruits(msg)
