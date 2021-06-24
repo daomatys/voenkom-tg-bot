@@ -68,7 +68,7 @@ bot.onText(/^[^/]/, msg => {
   if ( heComes ) {
     bot.sendMessage( msg.chat.id, `<i>— ${dbAnyText('answersRegular')}!</i>`, {parse_mode: 'HTML'} );
   }
-  if ( !heComes && getRandomInt(1000) <= heSpawnChance ) {
+  if ( !heComes && heSpawnChance >= getRandomInt(1000) ) {
     dbNarratorSwitchState()
       .run({ tablename: idTable });
       
@@ -131,10 +131,11 @@ bot.onText(/^\/aaaa/, msg => {
   
   if ( msg.date > calledAt + callCooldown ) {
     const rnd = getRandomInt( dbAnyTableLength( idTable ) );
-    const privateName = dbRecruitById(msg)
-      .get({ id: rnd })
-      .name
-      .toUpperCase();
+    const privateName = 
+      dbRecruitById(msg)
+        .get({ id: rnd })
+        .name
+        .toUpperCase();
     
     dbRecruitUpdate(msg)
       .run({ id: rnd });
@@ -160,10 +161,11 @@ bot.onText(/^\/spisok/, msg => {
       : 'раза' ;
       
   const spisokTitle = `ЛИЧНЫЙ СОСТАВ В/Ч 1337\nЗАЩИТИЛ САПОГИ:\n\n`;
-  const spisokBody = dbRecruits(msg)
-    .all()
-    .map(item => `• ${item.name} — ${item.count} ${setCountWord(item.count)}!`)
-    .join('\n');
+  const spisokBody = 
+    dbRecruits(msg)
+      .all()
+      .map(item => `• ${item.name} — ${item.count} ${setCountWord(item.count)}!`)
+      .join('\n');
   
   bot.sendMessage( msg.chat.id, '<code>' + spisokTitle + spisokBody + '</code>', {parse_mode: 'HTML'} );
 });
