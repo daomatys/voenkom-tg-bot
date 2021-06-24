@@ -60,8 +60,8 @@ bot.onText(/^[^/]/, msg => {
   dbNarratorNewTabname().run({ tablename: idTable });
   
   const heComes = dbNarrators()
-      .get({ tablename: idTable })
-      .state;
+    .get({ tablename: idTable })
+    .state;
   
   if ( heComes ) {
     bot.sendMessage( msg.chat.id, `<i>— ${dbAnyText('answersRegular')}!</i>`, {parse_mode: 'HTML'} );
@@ -78,7 +78,9 @@ bot.onText(/^\/pnh/, msg => {
   
   dbNarratorNewTabname().run({ tablename: idTable });
   
-  const heComes = dbNarrators().get({ tablename: idTable }).state;
+  const heComes = dbNarrators()
+    .get({ tablename: idTable })
+    .state;
   
   if ( heComes ) {
     dbNarratorSwitchState().run({ tablename: idTable });
@@ -112,15 +114,15 @@ bot.onText(/^\/aaaa/, msg => {
   dbNarratorNewTabname().run({ tablename: idTable });
   
   const calledAt = dbNarrators()
-      .get({ tablename: idTable })
-      .lastcall;
+    .get({ tablename: idTable })
+    .lastcall;
   
   if ( msg.date > calledAt + callCooldown ) {
     const r = getRandomInt( dbAnyTableLength( idTable ) );
     const privateName = dbRecruitById(msg)
-        .get({ id: r })
-        .name
-        .toUpperCase();
+      .get({ id: r })
+      .name
+      .toUpperCase();
     
     dbRecruitUpdate(msg).run({ id: r });
     dbNarratorSetCalltime(msg).run({ tablename: idTable });
